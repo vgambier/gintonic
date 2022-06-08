@@ -14,7 +14,7 @@ import subprocess
 LOG_FORMAT = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 
-WORK_DIR = os.path.join(os.path.expanduser('~'), '.gintonic')
+WORK_DIR = os.path.join(os.path.expanduser('~'), '.config/gintonic')
 CONFIG_FILE = os.path.join(WORK_DIR, 'config')
 
 SECTION = 'CONFIG'
