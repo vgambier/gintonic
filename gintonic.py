@@ -66,7 +66,7 @@ class PreviewWindow(object):
             full_path = os.path.join(path_to_games, system, game)
             cords = self.win.getbegyx()
             im_size_x = self.win.getmaxyx()[1] - 4
-            im_size_y = int(im_size_x * (3.0 / 4) * 1)
+            im_size_y = int(im_size_x * (3 / 4) * 1)
             for i in range(2):
                 if 3 + (im_size_y+1)*(i+1) > self.win.getmaxyx()[0]:
                     break
@@ -195,7 +195,7 @@ class GameMenu(object):
 
     def center(self, pos):
         if (pos >= 0) and (pos < len(data)):
-            half = self.syswin.getmaxyx()[0] / 2
+            half = self.syswin.getmaxyx()[0] // 2
             self.offset = max(pos - half, 0)
             self.pos = pos - self.offset
         self.draw()
