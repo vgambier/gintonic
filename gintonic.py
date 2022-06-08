@@ -10,11 +10,9 @@ import logging
 import time
 import threading
 import subprocess
-import thumbnails_view as thumbs
 
 LOG_FORMAT = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
-
 
 WORK_DIR = os.path.join(os.path.expanduser('~'), '.gintonic')
 CONFIG_FILE = os.path.join(WORK_DIR, 'config')
@@ -22,10 +20,8 @@ CONFIG_FILE = os.path.join(WORK_DIR, 'config')
 SECTION = 'CONFIG'
 PATH_TO_GAMES = 'path_to_games'
 
-SYSTEM_WIDTH = 15
-GAME_WIDTH = 44
-
-PREVIEW_WIDTH = 40
+SYSTEM_WIDTH = 50
+GAME_WIDTH = 120
 
 exited = False
 
@@ -53,14 +49,12 @@ class PreviewWindow(object):
         self.main = mainwindow
         self.game = game_menu
         size = mainwindow.getmaxyx()
-        self.win = curses.newwin(size[0]-5, PREVIEW_WIDTH, 4, GAME_WIDTH + SYSTEM_WIDTH + 2)
+        self.win = curses.newwin(size[0]-5, 1, 4, GAME_WIDTH + SYSTEM_WIDTH + 2)
         self.last_game_loaded = None
 
     def preview_work(self):
         while True:
             if exited:
-                return
-            if not(thumbs.process):
                 return
             time.sleep(0.01)
             to_load = self.game.current_game()
@@ -70,37 +64,13 @@ class PreviewWindow(object):
                 continue
             system, game = self.game.current_game()
             full_path = os.path.join(path_to_games, system, game)
-            thms = thumbs.get_thumbs(full_path)
             cords = self.win.getbegyx()
             im_size_x = self.win.getmaxyx()[1] - 4
-            im_size_y = int(im_size_x * (3.0 / 4) * (thumbs.cellx*1.0 / thumbs.celly))
+            im_size_y = int(im_size_x * (3.0 / 4) * 1)
             for i in range(2):
                 if 3 + (im_size_y+1)*(i+1) > self.win.getmaxyx()[0]:
                     break
-                if i < len(thms):
-                    thumbs.draw_image(cords[0]+3 + (im_size_y+1)*i, cords[1]+2, im_size_y, im_size_x, thms[i])
-                else:
-                    thumbs.clean(cords[0]+3 + (im_size_y+1)*i, cords[1]+2, im_size_y, im_size_x)
             self.last_game_loaded == to_load
-
-    def draw(self):
-        if self.main.getmaxyx()[1] < GAME_WIDTH + SYSTEM_WIDTH + 2 + 10:
-            return
-        self.win.border()
-        self.win.refresh()
-        if thumbs.process:
-            self.win.addstr(1, 2, 'Preview')
-        else:
-            self.win.addstr(1, 2, 'Preview isn\'t avail.')
-            return
-
-    def resize(self):
-        self.last_game_loaded = None
-        size = self.main.getmaxyx()
-        if (size[0] > 10) and (size[1] > SYSTEM_WIDTH + GAME_WIDTH + 2 + 10):
-            self.win.resize(size[0]-5, min(PREVIEW_WIDTH, max(1, size[1] - SYSTEM_WIDTH - GAME_WIDTH - 4)))
-            self.win.mvwin(4, SYSTEM_WIDTH + GAME_WIDTH + 2)
-            self.win.clear()
 
 
 class SearchWindow(object):
@@ -113,11 +83,11 @@ class SearchWindow(object):
         self.search_history = collections.deque(maxlen=100)
 
     def resize(self):
-        self.swin.resize(4, 59)
+        self.swin.resize(4, 158)
         self.inp.resize(1, 55)
 
     def draw(self):
-        self.swin.addstr(1, 20, 'Search Game')
+        self.swin.addstr(1, 80, 'Search Game')
         self.swin.border()
         self.swin.refresh()
         self.inp.refresh()
@@ -175,7 +145,7 @@ class GameMenu(object):
             self.syswin.resize(size[0]-5, min(SYSTEM_WIDTH, size[1]))
             self.gameswin.resize(size[0]-5, min(GAME_WIDTH, max(0, size[1] - SYSTEM_WIDTH)))
             self.syswin.mvwin(4, 0)
-            self.gameswin.mvwin(4, 15)
+            self.gameswin.mvwin(4, SYSTEM_WIDTH)
 
     def list_pos(self):
         return self.offset + self.pos
@@ -206,8 +176,6 @@ class GameMenu(object):
         self.gameswin.border()
         self.syswin.refresh()
         self.gameswin.refresh()
-        if preview_window:
-            preview_window.draw()
 
     def move_down(self):
         if self.list_pos() < len(data) - 1:
@@ -313,10 +281,8 @@ def do_resize():
     mainwindow.clear()
     game_menu.resize()
     search_window.resize()
-    preview_window.resize()
     game_menu.draw()
     search_window.draw()
-    preview_window.draw()
 
 
 def main_loop():
@@ -354,7 +320,6 @@ def main():
     try:
         read_config()
         make_index(path_to_games)
-        thumbs.init()
         init_curses()
         global game_menu
         global search_window
