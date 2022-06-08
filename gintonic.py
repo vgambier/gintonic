@@ -170,7 +170,7 @@ class GameMenu(object):
                 self.syswin.addstr(i + 1, 1, (' '*100)[:self.syswin.getmaxyx()[1] - 2])
             pos += 1
         self.main.addstr(self.main.getmaxyx()[0] - 1, 0,
-                         '"q"-quit, "l"-launch, "/"- search, "n"-next, "N"-prev, "j"-down, "k"-up'[:self.main.getmaxyx()[1]-1])
+                         '(q)uit, (l)aunch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
         self.main.refresh()
         self.syswin.border()
         self.gameswin.border()
