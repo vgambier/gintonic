@@ -5,7 +5,7 @@ import sys
 import curses
 import curses.textpad as textpad
 import collections
-import ConfigParser
+import configparser
 import logging
 import time
 import threading
@@ -29,7 +29,7 @@ PREVIEW_WIDTH = 40
 
 exited = False
 
-config = ConfigParser.ConfigParser()
+config = configparser.ConfigParser()
 
 mainwindow = curses.initscr()
 

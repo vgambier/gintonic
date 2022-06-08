@@ -41,7 +41,7 @@ def draw_image(starty, startx, sizey, sizex, path):
     inpline = "0;1;{};{};{};{};;;;;{}\n4;\n3;\n".format(
         startx*cellx, starty*celly, sizex*cellx, sizey*celly, path)
     try:
-        process.stdin.write(inpline)
+        process.stdin.write(inpline.encode('utf-8'))
         process.stdin.flush()
         process.stdout.readline()
     except IOError:
@@ -55,7 +55,7 @@ def clean(starty, startx, sizey, sizex):
     inpline = "6;{};{};{};{}\n4;\n3;\n".format(
         startx*cellx+2, starty*celly+2, sizex*cellx, sizey*celly)
     try:
-        process.stdin.write(inpline)
+        process.stdin.write(inpline.encode('utf-8'))
         process.stdin.flush()
         process.stdout.readline()
     except IOError:
