@@ -7,17 +7,15 @@ gintonic - is a lightweight game launcher, that works in a terminal. It is desig
   * Support of VIM-style keys
   * Search history
   * Script based confguration
-  * Preview of thumbnails
 
 ## Requirements
 
 * python
-* w3m-img (optional, for images previews)
 
 ## Installation
 
 * Download gintonic
-* Place a config file named config into ~/.gintonic
+* Place a config file named config into ~/.config/gintonic
 
 Example:
 ```
@@ -25,9 +23,7 @@ Example:
 path_to_games = /home/user/games
 run_dos = ./dos.sh {0}
 ```
-path_to_games - is a path to games. 
-
-Directory with the games should have the following structure:
+path_to_games - is a path to a directory with games that should have the following structure:
 ```
 System1
       |- Game1
@@ -39,15 +35,16 @@ System2
              |-thumbnails
 ```
 Where: 
-  SystemX - is the name of a system (DOS, NES, etc).<br>
+  SystemX - is the name of a system/folder (DOS, NES, etc).<br>
   GameX - is the name of a game.<br>
   thumbnails - is an optional subfolder with images.<br>
 <br>
 run_system - specifies a command to run a game on a particular system. {0} is substituted by an absolute path of a game.
+In the config file, run_system should be lower-case even if the folder contained upper-case letters.
 
 ## Run
 
-* python gintonic.py
+* python3 gintonic.py
 <br>
 If you use gintonic over ssh, run ssh with -X param to have images.
 For exit - press q. 
