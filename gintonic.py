@@ -20,8 +20,11 @@ CONFIG_FILE = os.path.join(WORK_DIR, 'config')
 SECTION = 'CONFIG'
 PATH_TO_GAMES = 'path_to_games'
 
-SYSTEM_WIDTH = 50
-GAME_WIDTH = 120
+ALL_SYSTEMS = "All systems"
+
+TOTAL_WIDTH = 160
+SYSTEM_WIDTH = 40
+GAME_WIDTH = TOTAL_WIDTH - SYSTEM_WIDTH
 
 exited = False
 
@@ -29,8 +32,8 @@ config = configparser.ConfigParser()
 
 mainwindow = curses.initscr()
 
+systems = []
 data = []
-
 
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
@@ -39,38 +42,12 @@ def read_config():
     path_to_games = config.get(SECTION, PATH_TO_GAMES)
 
 
-def check_find(word, item):
-    return word.upper() in item[0].upper() or word.upper() in item[1].upper()
+def check_find_system(word, item):
+    return word.upper() in item.upper()
 
 
-class PreviewWindow(object):
-
-    def __init__(self, mainwindow, game_menu):
-        self.main = mainwindow
-        self.game = game_menu
-        size = mainwindow.getmaxyx()
-        self.win = curses.newwin(size[0]-5, 1, 4, GAME_WIDTH + SYSTEM_WIDTH + 2)
-        self.last_game_loaded = None
-
-    def preview_work(self):
-        while True:
-            if exited:
-                return
-            time.sleep(0.01)
-            to_load = self.game.current_game()
-            if self.last_game_loaded == to_load:
-                continue
-            if self.main.getmaxyx()[1] < GAME_WIDTH + SYSTEM_WIDTH + 2 + 10:
-                continue
-            system, game = self.game.current_game()
-            full_path = os.path.join(path_to_games, system, game)
-            cords = self.win.getbegyx()
-            im_size_x = self.win.getmaxyx()[1] - 4
-            im_size_y = int(im_size_x * (3 / 4) * 1)
-            for i in range(2):
-                if 3 + (im_size_y+1)*(i+1) > self.win.getmaxyx()[0]:
-                    break
-            self.last_game_loaded == to_load
+def check_find_game(word, item):
+    return word.upper() in item[1].upper()
 
 
 class SearchWindow(object):
@@ -87,7 +64,7 @@ class SearchWindow(object):
         self.inp.resize(1, 55)
 
     def draw(self):
-        self.swin.addstr(1, 80, 'Search Game')
+        self.swin.addstr(1, 80, 'Search')
         self.swin.border()
         self.swin.refresh()
         self.inp.refresh()
@@ -127,14 +104,114 @@ class SearchWindow(object):
                 self.search_history.append(res)
         return res
 
+class SystemMenu(object):
+
+    def __init__(self, mainwindow):
+        self.main = mainwindow
+        size = mainwindow.getmaxyx()
+        self.syswin = curses.newwin(size[0]-5, TOTAL_WIDTH, 4, 0)
+        self.offset = 0
+        self.pos = 0
+        self.search_pos = 0
+
+    def resize(self):
+        size = self.main.getmaxyx()
+        if (size[0] > 10) and (size[1] > 20):
+            self.syswin.resize(size[0]-5, min(TOTAL_WIDTH, size[1]))
+            self.syswin.mvwin(4, 0)
+
+    def list_pos(self):
+        return self.offset + self.pos
+
+    def current_item(self):
+        if systems:
+            return systems[self.list_pos()]
+
+    def draw(self):
+        pos = self.offset
+        for i in range(self.syswin.getmaxyx()[0]-2):
+            style = 0
+            if pos == self.list_pos():
+                style = curses.A_STANDOUT
+            if pos < len(systems):
+                dat = (' ' + systems[pos] + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                self.syswin.addstr(i + 1, 1, dat, style)
+            else:
+                self.syswin.addstr(i + 1, 1, (' '*100)[:self.syswin.getmaxyx()[1] - 2])
+            pos += 1
+        self.main.addstr(self.main.getmaxyx()[0] - 1, 0,
+                         '(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
+        self.main.refresh()
+        self.syswin.border()
+        self.syswin.refresh()
+
+    def move_down(self):
+        if self.list_pos() < len(systems) - 1:
+            if self.pos < self.syswin.getmaxyx()[0]-3:
+                self.pos += 1
+            else:
+                self.offset += 1
+        self.draw()
+
+    def move_up(self):
+        if self.list_pos() > 0:
+            if self.pos > 0:
+                self.pos -= 1
+            else:
+                self.offset -= 1
+        self.draw()
+
+    def center(self, pos):
+        if (pos >= 0) and (pos < len(systems)):
+            half = self.syswin.getmaxyx()[0] // 2
+            self.offset = max(pos - half, 0)
+            self.pos = pos - self.offset
+        self.draw()
+
+    def find_word(self, word):
+        pos = self.list_pos()
+        for i in range(pos, len(systems)):
+            if check_find_system(word, systems[i]):
+                return i
+        for i in range(pos):
+            if check_find_system(word, systems[i]):
+                return i
+        return -1
+
+    def find_next(self, word):
+        pos = self.list_pos() + 1
+        if pos >= len(systems):
+            pos = 0
+        for i in range(pos, len(systems)):
+            if check_find_system(word, systems[i]):
+                return i
+        for i in range(pos):
+            if check_find_system(word, systems[i]):
+                return i
+        return -1
+
+    def find_prev(self, word):
+        if len(systems) == 0:
+            return -1
+        pos = self.list_pos() - 1
+        if pos < 0:
+            pos = len(systems) - 1
+        for i in range(pos, -1, -1):
+            if check_find_system(word, systems[i]):
+                return i
+        for i in range(len(systems) - 1, pos, -1):
+            if check_find_system(word, systems[i]):
+                return i
+        return -1
+
 
 class GameMenu(object):
 
     def __init__(self, mainwindow):
         self.main = mainwindow
         size = mainwindow.getmaxyx()
-        self.syswin = curses.newwin(size[0]-5, SYSTEM_WIDTH, 4, 0)
-        self.gameswin = curses.newwin(size[0]-5, GAME_WIDTH, 4, SYSTEM_WIDTH)
+        self.syswin = curses.newwin(size[0]-5, min(SYSTEM_WIDTH, size[1]), 4, 0)
+        self.gameswin = curses.newwin(size[0]-5, min(GAME_WIDTH, max(0, size[1] - SYSTEM_WIDTH)), 4, SYSTEM_WIDTH)
         self.offset = 0
         self.pos = 0
         self.search_pos = 0
@@ -147,10 +224,13 @@ class GameMenu(object):
             self.syswin.mvwin(4, 0)
             self.gameswin.mvwin(4, SYSTEM_WIDTH)
 
+    def reset_pos(self):
+        self.pos = 0
+
     def list_pos(self):
         return self.offset + self.pos
 
-    def current_game(self):
+    def current_item(self):
         if data:
             return data[self.list_pos()]
 
@@ -170,7 +250,7 @@ class GameMenu(object):
                 self.syswin.addstr(i + 1, 1, (' '*100)[:self.syswin.getmaxyx()[1] - 2])
             pos += 1
         self.main.addstr(self.main.getmaxyx()[0] - 1, 0,
-                         '(q)uit, (l)aunch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
+                         '(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
         self.main.refresh()
         self.syswin.border()
         self.gameswin.border()
@@ -203,10 +283,10 @@ class GameMenu(object):
     def find_word(self, word):
         pos = self.list_pos()
         for i in range(pos, len(data)):
-            if check_find(word, data[i]):
+            if check_find_game(word, data[i]):
                 return i
         for i in range(pos):
-            if check_find(word, data[i]):
+            if check_find_game(word, data[i]):
                 return i
         return -1
 
@@ -215,10 +295,10 @@ class GameMenu(object):
         if pos >= len(data):
             pos = 0
         for i in range(pos, len(data)):
-            if check_find(word, data[i]):
+            if check_find_game(word, data[i]):
                 return i
         for i in range(pos):
-            if check_find(word, data[i]):
+            if check_find_game(word, data[i]):
                 return i
         return -1
 
@@ -229,28 +309,44 @@ class GameMenu(object):
         if pos < 0:
             pos = len(data) - 1
         for i in range(pos, -1, -1):
-            if check_find(word, data[i]):
+            if check_find_game(word, data[i]):
                 return i
         for i in range(len(data) - 1, pos, -1):
-            if check_find(word, data[i]):
+            if check_find_game(word, data[i]):
                 return i
         return -1
 
 
+system_menu = None
 game_menu = None
+current_menu_is_systems = True
 search_window = None
-preview_window = None
+
+
+def open_system(selected_system: str):
+    close_curses()
+    print(f"OPENING: {selected_system}")
+    make_index(path_to_games, selected_system)
+    init_curses()
+    curses.flushinp()
+    search_window.draw()
+    global current_menu_is_systems
+    current_menu_is_systems = False
+    game_menu.reset_pos()
+    game_menu.draw()
 
 
 def launch_game(game_tuple):
     close_curses()
-    print('RUNNING: ' + str(game_tuple))
+    print(f"RUNNING: {game_tuple}")
     system = game_tuple[0]
     game = game_tuple[1]
     full_path = os.path.join(path_to_games, system, game)
+    print(full_path)
     args = config.get(SECTION, 'run_'+system).format(full_path)
     origWD = os.getcwd()
     os.chdir(os.path.dirname(CONFIG_FILE))
+    print(args)
     try:
         subprocess.call(args, shell=True)
     except KeyboardInterrupt:
@@ -279,9 +375,15 @@ def close_curses():
 
 def do_resize():
     mainwindow.clear()
-    game_menu.resize()
+
+    if current_menu_is_systems:
+        system_menu.resize()
+        system_menu.draw()
+    else:
+        game_menu.resize()
+        game_menu.draw()
+
     search_window.resize()
-    game_menu.draw()
     search_window.draw()
 
 
@@ -289,67 +391,114 @@ def main_loop():
     while 1:
         time.sleep(0.001)
         c = mainwindow.getch()
-        if c == ord('/'):
-            word = search_window.enter()
-            found = game_menu.find_word(word)
-            game_menu.center(found)
-        if c == ord('j') or c == curses.KEY_DOWN:
-            game_menu.move_down()
-        if c == ord('k') or c == curses.KEY_UP:
-            game_menu.move_up()
-        if c == ord('n'):
-            word = search_window.text.gather().strip()
-            found = game_menu.find_next(word)
-            game_menu.center(found)
-        if c == ord('N'):
-            word = search_window.text.gather().strip()
-            found = game_menu.find_prev(word)
-            game_menu.center(found)
-        if c == ord('\n') or c == ord('l'):
-            cg = game_menu.current_game()
-            launch_game(cg)
-        if c == ord('q'):
-            return
-        if c == curses.KEY_RESIZE:
-            do_resize()
+        if current_menu_is_systems:
+            if c == ord('q'):
+                return
+            main_loop_systems(c)
+        else:
+            main_loop_games(c)
 
+
+def main_loop_systems(c):
+    if c == ord('/'):
+        word = search_window.enter()
+        found = system_menu.find_word(word)
+        system_menu.center(found)
+    if c == ord('j') or c == curses.KEY_DOWN:
+        system_menu.move_down()
+    if c == ord('k') or c == curses.KEY_UP:
+        system_menu.move_up()
+    if c == ord('n'):
+        word = search_window.text.gather().strip()
+        found = system_menu.find_next(word)
+        system_menu.center(found)
+    if c == ord('N'):
+        word = search_window.text.gather().strip()
+        found = system_menu.find_prev(word)
+        system_menu.center(found)
+    if c == ord('\n') or c == ord('l'):
+        current_system = system_menu.current_item()
+        open_system(current_system)
+    if c == curses.KEY_RESIZE:
+        do_resize()
+
+
+def main_loop_games(c):
+    if c == ord('/'):
+        word = search_window.enter()
+        found = game_menu.find_word(word)
+        game_menu.center(found)
+    if c == ord('j') or c == curses.KEY_DOWN:
+        game_menu.move_down()
+    if c == ord('k') or c == curses.KEY_UP:
+        game_menu.move_up()
+    if c == ord('n'):
+        word = search_window.text.gather().strip()
+        found = game_menu.find_next(word)
+        game_menu.center(found)
+    if c == ord('N'):
+        word = search_window.text.gather().strip()
+        found = game_menu.find_prev(word)
+        game_menu.center(found)
+    if c == ord('\n') or c == ord('l'):
+        cg = game_menu.current_item()
+        launch_game(cg)
+    if c == ord('q'):
+        global current_menu_is_systems
+        current_menu_is_systems = True
+        init_curses()
+        curses.flushinp()
+        search_window.draw()
+        system_menu.draw()
+
+    if c == curses.KEY_RESIZE:
+        do_resize()
 
 def main():
     global exited
-    preview_thread = None
     try:
         read_config()
-        make_index(path_to_games)
+        make_systems(path_to_games)
         init_curses()
+        global system_menu
         global game_menu
         global search_window
-        global preview_window
         search_window = SearchWindow()
+        system_menu = SystemMenu(mainwindow)
         game_menu = GameMenu(mainwindow)
-        preview_window = PreviewWindow(mainwindow, game_menu)
-        preview_thread = threading.Thread(target=preview_window.preview_work)
-        preview_thread.start()
         do_resize()
         main_loop()
     except Exception as e:
         logging.exception(e)
     finally:
         exited = True
-        if preview_thread and preview_thread.is_alive():
-            preview_thread.join()
         close_curses()
 
 
-def make_index(path):
-    global data
+def make_systems(path):
+    global systems
     systems = os.listdir(path)
-    for system in systems:
-        if os.path.isdir(path + os.sep + system):
+    systems.sort()
+    systems.insert(0, ALL_SYSTEMS)
+
+
+def make_index(path, selected_system):
+    global data
+
+    data.clear()
+
+    if selected_system == ALL_SYSTEMS:
+        system_list = os.listdir(path)
+        for system in system_list:
             games = os.listdir(path + os.sep + system)
             for game in games:
                 data.append((system, game))
-    data.sort()
+    else:
+        games = os.listdir(path + os.sep + selected_system)
+        for game in games:
+            data.append((selected_system, game))
 
+    data.sort()
 
 if __name__ == '__main__':
     main()

@@ -1,6 +1,6 @@
 # gintonic
 
-gintonic - is a lightweight game launcher, that works in a terminal. It is designed to be fast, to be comfortable for keyboard users and to work through ssh.
+gintonic is a lightweight game launcher that works in a terminal. It is designed to be fast, to be comfortable for keyboard users and to work through ssh.
 
 ## Features
 
@@ -15,7 +15,7 @@ gintonic - is a lightweight game launcher, that works in a terminal. It is desig
 ## Installation
 
 * Download gintonic
-* Place a config file named config into ~/.config/gintonic
+* Place a config file named config into ~/.config/gintonic. You can use the example config_template folder for this purpose.
 
 Example:
 ```
