@@ -35,6 +35,7 @@ mainwindow = curses.initscr()
 systems = []
 data = []
 
+
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
     config.read(CONFIG_FILE)
@@ -134,10 +135,10 @@ class SystemMenu(object):
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(systems):
-                dat = (' ' + systems[pos] + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + systems[pos] + ' ' * TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
             else:
-                self.syswin.addstr(i + 1, 1, (' '*100)[:self.syswin.getmaxyx()[1] - 2])
+                self.syswin.addstr(i + 1, 1, (' '*TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 2])
             pos += 1
         self.main.addstr(self.main.getmaxyx()[0] - 1, 0,
                          '(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
@@ -223,6 +224,11 @@ class GameMenu(object):
             self.gameswin.resize(size[0]-5, min(GAME_WIDTH, max(0, size[1] - SYSTEM_WIDTH)))
             self.syswin.mvwin(4, 0)
             self.gameswin.mvwin(4, SYSTEM_WIDTH)
+
+    def refresh_window(self):
+        self.gameswin.erase()
+        self.gameswin.addstr(0, 0, '')
+        self.gameswin.refresh()
 
     def reset_pos(self):
         self.pos = 0
@@ -448,6 +454,7 @@ def main_loop_games(c):
         current_menu_is_systems = True
         init_curses()
         curses.flushinp()
+        game_menu.refresh_window()
         search_window.draw()
         system_menu.draw()
 
