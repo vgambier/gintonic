@@ -485,17 +485,20 @@ def main():
 def make_systems(path):
     global systems
     systems = os.listdir(path)
+    # Only display systems that have a valid launcher in the config file
+    systems = list(filter(lambda s: config.has_option(SECTION, 'run_'+s) and config.get(SECTION, 'run_'+s) != "", systems))
     systems.sort()
     systems.insert(0, ALL_SYSTEMS)
 
 
 def make_index(path, selected_system):
     global data
+    global systems
 
     data.clear()
 
     if selected_system == ALL_SYSTEMS:
-        system_list = os.listdir(path)
+        system_list = systems[1:] # removing ALL_SYSTEMS
         for system in system_list:
             games = os.listdir(path + os.sep + system)
             for game in games:
