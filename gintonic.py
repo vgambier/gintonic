@@ -18,7 +18,7 @@ WORK_DIR = os.path.join(os.path.expanduser('~'), '.config/gintonic')
 CONFIG_FILE = os.path.join(WORK_DIR, 'config')
 
 SECTION = 'CONFIG'
-PATH_TO_GAMES = 'path_to_games'
+PATHS_TO_GAMES = 'paths_to_games'
 
 ALL_SYSTEMS = "All systems"
 
@@ -39,8 +39,8 @@ data = []
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
     config.read(CONFIG_FILE)
-    global path_to_games
-    path_to_games = config.get(SECTION, PATH_TO_GAMES)
+    global paths_to_games
+    paths_to_games = config.get(SECTION, PATHS_TO_GAMES)
 
 
 def check_find_system(word, item):
@@ -48,7 +48,7 @@ def check_find_system(word, item):
 
 
 def check_find_game(word, item):
-    return word.upper() in item[1].upper()
+    return word.upper() in item[2].upper()
 
 
 class SearchWindow(object):
@@ -135,7 +135,7 @@ class SystemMenu(object):
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(systems):
-                dat = (' ' + systems[pos] + ' ' * TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + systems[pos][1] + ' ' * TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
             else:
                 self.syswin.addstr(i + 1, 1, (' '*TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 2])
@@ -172,10 +172,10 @@ class SystemMenu(object):
     def find_word(self, word):
         pos = self.list_pos()
         for i in range(pos, len(systems)):
-            if check_find_system(word, systems[i]):
+            if check_find_system(word, systems[i][1]):
                 return i
         for i in range(pos):
-            if check_find_system(word, systems[i]):
+            if check_find_system(word, systems[i][1]):
                 return i
         return -1
 
@@ -184,10 +184,10 @@ class SystemMenu(object):
         if pos >= len(systems):
             pos = 0
         for i in range(pos, len(systems)):
-            if check_find_system(word, systems[i]):
+            if check_find_system(word, systems[i][1]):
                 return i
         for i in range(pos):
-            if check_find_system(word, systems[i]):
+            if check_find_system(word, systems[i][1]):
                 return i
         return -1
 
@@ -198,10 +198,10 @@ class SystemMenu(object):
         if pos < 0:
             pos = len(systems) - 1
         for i in range(pos, -1, -1):
-            if check_find_system(word, systems[i]):
+            if check_find_system(word, systems[i][1]):
                 return i
         for i in range(len(systems) - 1, pos, -1):
-            if check_find_system(word, systems[i]):
+            if check_find_system(word, systems[i][1]):
                 return i
         return -1
 
@@ -247,9 +247,9 @@ class GameMenu(object):
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(data):
-                dat = (' ' + data[pos][1] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + data[pos][2] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 self.gameswin.addstr(i + 1, 1, dat, style)
-                dat = (' ' + data[pos][0] + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + data[pos][1] + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
             else:
                 self.gameswin.addstr(i + 1, 1, (' '*100)[:self.gameswin.getmaxyx()[1] - 2])
@@ -329,10 +329,10 @@ current_menu_is_systems = True
 search_window = None
 
 
-def open_system(selected_system: str):
+def open_system(selected_system_tuple):
     close_curses()
-    print(f"OPENING: {selected_system}")
-    make_index(path_to_games, selected_system)
+    print(f"OPENING: {selected_system_tuple}")
+    make_index(*selected_system_tuple)
     init_curses()
     curses.flushinp()
     search_window.draw()
@@ -345,14 +345,13 @@ def open_system(selected_system: str):
 def launch_game(game_tuple):
     close_curses()
     print(f"RUNNING: {game_tuple}")
-    system = game_tuple[0]
-    game = game_tuple[1]
-    full_path = os.path.join(path_to_games, system, game)
-    print(full_path)
+    path = game_tuple[0]
+    system = game_tuple[1]
+    game = game_tuple[2]
+    full_path = os.path.join(path, system, game)
     args = config.get(SECTION, 'run_'+system).format(full_path)
     origWD = os.getcwd()
     os.chdir(os.path.dirname(CONFIG_FILE))
-    print(args)
     try:
         subprocess.call(args, shell=True)
     except KeyboardInterrupt:
@@ -465,7 +464,10 @@ def main():
     global exited
     try:
         read_config()
-        make_systems(path_to_games)
+        make_systems(paths_to_games)
+        global systems
+        #systems = [('', 'Hello')]
+        #systems = ['1', '2']
         init_curses()
         global system_menu
         global game_menu
@@ -482,13 +484,14 @@ def main():
         close_curses()
 
 
-def make_systems(path):
+def make_systems(paths):
     global systems
-    systems = os.listdir(path)
-    # Only display systems that have a valid launcher in the config file
-    systems = list(filter(lambda s: config.has_option(SECTION, 'run_'+s) and config.get(SECTION, 'run_'+s) != "", systems))
-    systems.sort()
-    systems.insert(0, ALL_SYSTEMS)
+    for path in paths.split(";"):
+        sys_list = [(path, system) for system in os.listdir(path)]
+        # Only display systems that have a valid launcher in the config file
+        systems.extend(list(filter(lambda sys_tuple: config.has_option(SECTION, 'run_'+sys_tuple[1]) and config.get(SECTION, 'run_'+sys_tuple[1]) != "", sys_list)))
+    systems.sort(key=lambda sys_tuple: sys_tuple[1])
+    systems.insert(0, ("", ALL_SYSTEMS))
 
 
 def make_index(path, selected_system):
@@ -500,15 +503,14 @@ def make_index(path, selected_system):
     if selected_system == ALL_SYSTEMS:
         system_list = systems[1:] # removing ALL_SYSTEMS
         for system in system_list:
-            games = os.listdir(path + os.sep + system)
+            games = os.listdir(system[0] + os.sep + system[1])
             for game in games:
-                data.append((system, game))
+                data.append((system[0], system[1], game))
     else:
         games = os.listdir(path + os.sep + selected_system)
         for game in games:
-            data.append((selected_system, game))
+            data.append((path, selected_system, game))
 
-    data.sort()
 
 if __name__ == '__main__':
     main()

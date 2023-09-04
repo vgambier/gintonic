@@ -20,24 +20,21 @@ gintonic is a lightweight game launcher that works in a terminal. It is designed
 Example:
 ```
 [CONFIG]
-path_to_games = /home/user/games
+paths_to_games = /home/user/games;/home/user2/games
 run_dos = ./dos.sh {0}
 ```
-path_to_games - is a path to a directory with games that should have the following structure:
+paths_to_games - each semicolon-separated path is a path to a directory with games that should have the following structure:
 ```
 System1
       |- Game1
       |- Game2
-             |-thumbnails
       |- Game3
 System2
       |- Game1
-             |-thumbnails
 ```
 Where: 
   SystemX - is the name of a system/folder (DOS, NES, etc).<br>
   GameX - is the name of a game.<br>
-  thumbnails - is an optional subfolder with images.<br>
 <br>
 run_system - specifies a command to run a game on a particular system. {0} is substituted by an absolute path of a game.
 In the config file, run_system should be lower-case even if the folder contained upper-case letters.
