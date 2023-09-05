@@ -21,7 +21,9 @@ Example:
 ```
 [CONFIG]
 paths_to_games = /home/user/games;/home/user2/games
+path_to_mame = /home/user/mame_roms
 run_dos = ./dos.sh {0}
+run_mame = 
 ```
 paths_to_games - each semicolon-separated path is a path to a directory with games that should have the following structure:
 ```
@@ -38,6 +40,7 @@ Where:
 <br>
 run_system - specifies a command to run a game on a particular system. {0} is substituted by an absolute path of a game.
 In the config file, run_system should be lower-case even if the folder contained upper-case letters.
+run_mame is a special case which will be used to launch arcade games with MAME, regardless of the name of the folder.
 
 ## Run
 

@@ -21,6 +21,7 @@ SECTION = 'CONFIG'
 PATHS_TO_GAMES = 'paths_to_games'
 
 ALL_SYSTEMS = "All systems"
+ARCADE = "Arcade"
 
 TOTAL_WIDTH = 160
 SYSTEM_WIDTH = 40
@@ -34,6 +35,7 @@ mainwindow = curses.initscr()
 
 systems = []
 data = []
+arcade_dict = {}
 
 
 def read_config():
@@ -48,7 +50,20 @@ def check_find_system(word, item):
 
 
 def check_find_game(word, item):
-    return word.upper() in item[2].upper()
+    if item[1] == ARCADE and item[2].split(".")[0] in arcade_dict:
+        return word.upper() in arcade_dict[item[2].split(".")[0]].upper()
+    else:
+        return word.upper() in item[2].upper()
+
+
+def fill_arcade_dictionary():
+    global arcade_dict
+
+    mame_list = subprocess.run(['mame', '-listfull'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    for line in mame_list.split('\n')[1:-1]:
+        file_name = line[:line.index(" ")]
+        human_name = line[line.index(" "):].lstrip()[1:-1]
+        arcade_dict[file_name] = human_name
 
 
 class SearchWindow(object):
@@ -247,7 +262,10 @@ class GameMenu(object):
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(data):
-                dat = (' ' + data[pos][2] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                if data[pos][1] == ARCADE and data[pos][2].split(".")[0] in arcade_dict:
+                    dat = (' ' + arcade_dict[data[pos][2].split(".")[0]] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                else:
+                    dat = (' ' + data[pos][2] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 self.gameswin.addstr(i + 1, 1, dat, style)
                 dat = (' ' + data[pos][1] + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
@@ -331,7 +349,12 @@ search_window = None
 
 def open_system(selected_system_tuple):
     close_curses()
-    print(f"OPENING: {selected_system_tuple}")
+
+    global arcade_dict
+    if not arcade_dict:
+        if selected_system_tuple[1] in [ALL_SYSTEMS, ARCADE]:
+            fill_arcade_dictionary()
+
     make_index(*selected_system_tuple)
     init_curses()
     curses.flushinp()
@@ -348,8 +371,9 @@ def launch_game(game_tuple):
     path = game_tuple[0]
     system = game_tuple[1]
     game = game_tuple[2]
-    full_path = os.path.join(path, system, game)
-    args = config.get(SECTION, 'run_'+system).format(full_path)
+    run_option = "run_mame" if system == ARCADE else 'run_'+system
+    full_path = os.path.join(path, game) if system == ARCADE else os.path.join(path, system, game)
+    args = config.get(SECTION, run_option).format(full_path)
     origWD = os.getcwd()
     os.chdir(os.path.dirname(CONFIG_FILE))
     try:
@@ -466,8 +490,6 @@ def main():
         read_config()
         make_systems(paths_to_games)
         global systems
-        #systems = [('', 'Hello')]
-        #systems = ['1', '2']
         init_curses()
         global system_menu
         global game_menu
@@ -484,14 +506,23 @@ def main():
         close_curses()
 
 
+def is_config_option_valid(option):
+    return config.has_option(SECTION, option) and config.get(SECTION, option) != ""
+
+
 def make_systems(paths):
     global systems
+    
     for path in paths.split(";"):
         sys_list = [(path, system) for system in os.listdir(path)]
         # Only display systems that have a valid launcher in the config file
-        systems.extend(list(filter(lambda sys_tuple: config.has_option(SECTION, 'run_'+sys_tuple[1]) and config.get(SECTION, 'run_'+sys_tuple[1]) != "", sys_list)))
+        systems.extend(list(filter(lambda sys_tuple: is_config_option_valid('run_'+sys_tuple[1]), sys_list)))
     systems.sort(key=lambda sys_tuple: sys_tuple[1])
+
     systems.insert(0, ("", ALL_SYSTEMS))
+
+    if is_config_option_valid('path_to_mame') and is_config_option_valid('run_mame'):
+        systems.insert(1, (config.get(SECTION, 'path_to_mame'), ARCADE))
 
 
 def make_index(path, selected_system):
@@ -503,9 +534,19 @@ def make_index(path, selected_system):
     if selected_system == ALL_SYSTEMS:
         system_list = systems[1:] # removing ALL_SYSTEMS
         for system in system_list:
-            games = os.listdir(system[0] + os.sep + system[1])
-            for game in games:
-                data.append((system[0], system[1], game))
+            if system[1] == ARCADE:
+                games = os.listdir(system[0])
+                for game in games:
+                    data.append((system[0], system[1], game))
+            else:
+                games = os.listdir(system[0] + os.sep + system[1])
+                for game in games:
+                    data.append((system[0], system[1], game))
+    elif selected_system == ARCADE:
+        games = os.listdir(path)
+        for game in games:
+            data.append((path, selected_system, game))
+            #data.sort(key=lambda game_tuple: arcade_dict[game_tuple[2].split(".")[0]] if game_tuple[2].split(".")[0] in arcade_dict else game_tuple[2])
     else:
         games = os.listdir(path + os.sep + selected_system)
         for game in games:
