@@ -247,6 +247,7 @@ class GameMenu(object):
 
     def reset_pos(self):
         self.pos = 0
+        self.offset = 0
 
     def list_pos(self):
         return self.offset + self.pos
