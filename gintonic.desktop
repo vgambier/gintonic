@@ -1,0 +1,9 @@
+[Desktop Entry]
+
+Type=Application
+Version=1.0
+Name=gintonic
+Comment=Emulator launcher
+Exec=gnome-terminal -- /home/XXX/Documents/programs/gintonic/gintonic.py
+Icon=gintonic
+Categories=Game;

@@ -46,6 +46,14 @@ run_mame is a special case which will be used to launch arcade games with MAME, 
 
 * python3 gintonic.py
 <br>
-If you use gintonic over ssh, run ssh with -X param to have images.
 For exit - press q. 
 
+## Desktop entry
+.desktop and .svg files are provided. To add gintonic as a desktop entry, edit gintonic.desktop to reflect the directory in which gintonic.py is located
+then run the following commands:
+* `cp gintonic.desktop ~/.local/share/applications/`
+* `cp gintonic.svg ~/.icons/`
+
+This uses gnome-terminal as the terminal emulator. If you want to use a different terminal emulator, you have two options:
+* edit the Exec line to explicitly state your terminal emulator of choice (e.g.: kgx ./gintonic.py)
+* edit the Exec line to remove gnome-console (Exec=./gintonic.py) and add the following line: `Terminal=true`)
