@@ -31,7 +31,7 @@ config = configparser.ConfigParser()
 mainwindow = curses.initscr()
 
 systems = []
-data = []
+games = []
 
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
@@ -246,8 +246,8 @@ class GameMenu(object):
         return self.offset + self.pos
 
     def current_item(self):
-        if data:
-            return data[self.list_pos()]
+        if games:
+            return games[self.list_pos()]
 
     def draw(self):
         pos = self.offset
@@ -255,10 +255,10 @@ class GameMenu(object):
             style = 0
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
-            if pos < len(data):
-                dat = (' ' + data[pos].name + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+            if pos < len(games):
+                dat = (' ' + games[pos].name + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 self.gameswin.addstr(i + 1, 1, dat, style)
-                dat = (' ' + data[pos].system + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + games[pos].system + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
             else:
                 self.gameswin.addstr(i + 1, 1, (' '*100)[:self.gameswin.getmaxyx()[1] - 2])
@@ -273,7 +273,7 @@ class GameMenu(object):
         self.gameswin.refresh()
 
     def move_down(self):
-        if self.list_pos() < len(data) - 1:
+        if self.list_pos() < len(games) - 1:
             if self.pos < self.syswin.getmaxyx()[0]-3:
                 self.pos += 1
             else:
@@ -289,7 +289,7 @@ class GameMenu(object):
         self.draw()
 
     def center(self, pos):
-        if (pos >= 0) and (pos < len(data)):
+        if (pos >= 0) and (pos < len(games)):
             half = self.syswin.getmaxyx()[0] // 2
             self.offset = max(pos - half, 0)
             self.pos = pos - self.offset
@@ -297,37 +297,37 @@ class GameMenu(object):
 
     def find_word(self, word):
         pos = self.list_pos()
-        for i in range(pos, len(data)):
-            if check_find_game(word, data[i]):
+        for i in range(pos, len(games)):
+            if check_find_game(word, games[i]):
                 return i
         for i in range(pos):
-            if check_find_game(word, data[i]):
+            if check_find_game(word, games[i]):
                 return i
         return -1
 
     def find_next(self, word):
         pos = self.list_pos() + 1
-        if pos >= len(data):
+        if pos >= len(games):
             pos = 0
-        for i in range(pos, len(data)):
-            if check_find_game(word, data[i]):
+        for i in range(pos, len(games)):
+            if check_find_game(word, games[i]):
                 return i
         for i in range(pos):
-            if check_find_game(word, data[i]):
+            if check_find_game(word, games[i]):
                 return i
         return -1
 
     def find_prev(self, word):
-        if len(data) == 0:
+        if len(games) == 0:
             return -1
         pos = self.list_pos() - 1
         if pos < 0:
-            pos = len(data) - 1
+            pos = len(games) - 1
         for i in range(pos, -1, -1):
-            if check_find_game(word, data[i]):
+            if check_find_game(word, games[i]):
                 return i
-        for i in range(len(data) - 1, pos, -1):
-            if check_find_game(word, data[i]):
+        for i in range(len(games) - 1, pos, -1):
+            if check_find_game(word, games[i]):
                 return i
         return -1
 
@@ -512,9 +512,9 @@ def make_systems(paths):
     systems.insert(1, System("", ARCADE))
 
 def add_regular_games(path, selected_system):
-    games = sorted(os.listdir(path + os.sep + selected_system))
-    for game in games:
-        data.append(Game(path, selected_system, game))
+    new_games = sorted(os.listdir(path + os.sep + selected_system))
+    for game in new_games:
+        games.append(Game(path, selected_system, game))
 
 
 def add_arcade_games(path, selected_system):
@@ -524,11 +524,11 @@ def add_arcade_games(path, selected_system):
     for line in mame_list.split('\n')[1:-1]:
         file_name = line[:line.index(" ")]
         human_name = line[line.index(" "):].lstrip()[1:-1]
-        data.append(Game(file_name, selected_system, human_name))
+        games.append(Game(file_name, selected_system, human_name))
         # NB: sort is too expensive, we keep the order of mame -listfull which is already somewhat sorted
-        #data.sort(key=lambda game_obj: game_obj.name)
+        #games.sort(key=lambda game_obj: game_obj.name)
 
-def add_games_to_data(path, selected_system):
+def add_games(path, selected_system):
     if selected_system == ARCADE:
         add_arcade_games(path, selected_system)
     else:
@@ -539,14 +539,14 @@ def make_index(selected_system_obj):
     path = selected_system_obj.path
     selected_system = selected_system_obj.name
 
-    data.clear()
+    games.clear()
 
     if selected_system == ALL_SYSTEMS:
         system_list = systems[1:] # removing ALL_SYSTEMS
         for system in system_list:
-            add_games_to_data(system.path, system.name)
+            add_games(system.path, system.name)
     else:
-        add_games_to_data(path, selected_system)
+        add_games(path, selected_system)
 
 
 if __name__ == '__main__':
