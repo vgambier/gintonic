@@ -4,13 +4,13 @@ gintonic is a lightweight game launcher that works in a terminal. It is designed
 
 ## Features
 
-  * Support of VIM-style keys
-  * Search history
-  * Script based confguration
+* Support of VIM-style keys
+* Search history
+* Script based confguration
 
 ## Requirements
 
-* python
+* python3
 
 ## Installation
 
@@ -21,18 +21,17 @@ Example:
 ```
 [CONFIG]
 paths_to_games = /home/user/games;/home/user2/games
-path_to_mame = /home/user/mame_roms
 run_dos = ./dos.sh {0}
-run_mame = 
+run_mame = mame "{0}"
 ```
 paths_to_games - each semicolon-separated path is a path to a directory with games that should have the following structure:
 ```
-System1
-      |- Game1
-      |- Game2
-      |- Game3
-System2
-      |- Game1
+├── System1
+│   ├── Game1
+│   ├── Game2
+│   └── Game3
+└── System2
+    └── Game1
 ```
 Where: 
   SystemX - is the name of a system/folder (DOS, NES, etc).<br>

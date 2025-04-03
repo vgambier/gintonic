@@ -19,23 +19,19 @@ CONFIG_FILE = os.path.join(WORK_DIR, 'config')
 
 SECTION = 'CONFIG'
 PATHS_TO_GAMES = 'paths_to_games'
-
 ALL_SYSTEMS = "All systems"
 ARCADE = "Arcade"
 
 TOTAL_WIDTH = 160
 SYSTEM_WIDTH = 40
 GAME_WIDTH = TOTAL_WIDTH - SYSTEM_WIDTH
-
 exited = False
 
 config = configparser.ConfigParser()
-
 mainwindow = curses.initscr()
 
 systems = []
 data = []
-arcade_dict = {}
 
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
@@ -49,18 +45,8 @@ def check_find_system(word, item):
 
 
 def check_find_game(word, item):
-    if item.system == ARCADE and item.name.split(".")[0] in arcade_dict:
-        return word.upper() in arcade_dict[item.name.split(".")[0]].upper()
-    else:
-        return word.upper() in item.name.upper()
+    return word.upper() in item.name.upper()
 
-
-def fill_arcade_dictionary(arcade_dict):
-    mame_list = subprocess.run(['mame', '-listfull'], stdout=subprocess.PIPE).stdout.decode('utf-8')
-    for line in mame_list.split('\n')[1:-1]:
-        file_name = line[:line.index(" ")]
-        human_name = line[line.index(" "):].lstrip()[1:-1]
-        arcade_dict[file_name] = human_name
 
 class System:
     def __init__(self, path, name):
@@ -270,10 +256,7 @@ class GameMenu(object):
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(data):
-                if data[pos].system == ARCADE and data[pos].name.split(".")[0] in arcade_dict:
-                    dat = (' ' + arcade_dict[data[pos].name.split(".")[0]] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
-                else:
-                    dat = (' ' + data[pos].name + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + data[pos].name + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 self.gameswin.addstr(i + 1, 1, dat, style)
                 dat = (' ' + data[pos].system + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
@@ -357,13 +340,6 @@ search_window = None
 
 def open_system(selected_system):
     close_curses()
-
-    # TODO move this make_index, and within make_index, use similar logic to fill the arcade list with the first part of the output of mame -listfull. but also make sure it's ordered according to the display name?
-    global arcade_dict
-    if not arcade_dict:
-        if selected_system.name in [ALL_SYSTEMS, ARCADE]:
-            fill_arcade_dictionary(arcade_dict)
-
     make_index(selected_system)
     init_curses()
     curses.flushinp()
@@ -379,9 +355,15 @@ def launch_game(game_obj):
     path = game_obj.path
     system = game_obj.system
     name = game_obj.name
+
     print(f"RUNNING: {name}")
-    run_option = "run_mame" if system == ARCADE else 'run_'+system
-    full_path = os.path.join(path, name) if system == ARCADE else os.path.join(path, system, name)
+    if system == ARCADE:
+        run_option = "run_mame"
+        full_path = path
+    else:
+        run_option = 'run_'+system
+        full_path = os.path.join(path, system, name)
+
     args = config.get(SECTION, run_option).format(full_path)
     origWD = os.getcwd()
     os.chdir(os.path.dirname(CONFIG_FILE))
@@ -526,9 +508,8 @@ def make_systems(paths):
     systems.sort(key=lambda sys_obj: sys_obj.name)
 
     systems.insert(0, System("", ALL_SYSTEMS))
-
-    if is_config_option_valid('path_to_mame') and is_config_option_valid('run_mame'):
-        systems.insert(1, System(config.get(SECTION, 'path_to_mame'), ARCADE))
+    # for MAME, we launch arcade games without a filepath
+    systems.insert(1, System("", ARCADE))
 
 def add_regular_games(path, selected_system):
     games = sorted(os.listdir(path + os.sep + selected_system))
@@ -537,11 +518,15 @@ def add_regular_games(path, selected_system):
 
 
 def add_arcade_games(path, selected_system):
-    games = os.listdir(path)
-    for game in games:
-        data.append(Game(path, selected_system, game))
-        data.sort(key=lambda game_obj: arcade_dict[game_obj.name.split(".")[0]] if game_obj.name.split(".")[0] in arcade_dict else game_obj.name)
 
+    mame_list = subprocess.run(['mame', '-listfull'], stdout=subprocess.PIPE).stdout.decode('utf-8')
+    # NB: this list includes consoles
+    for line in mame_list.split('\n')[1:-1]:
+        file_name = line[:line.index(" ")]
+        human_name = line[line.index(" "):].lstrip()[1:-1]
+        data.append(Game(file_name, selected_system, human_name))
+        # NB: sort is too expensive, we keep the order of mame -listfull which is already somewhat sorted
+        #data.sort(key=lambda game_obj: game_obj.name)
 
 def add_games_to_data(path, selected_system):
     if selected_system == ARCADE:
