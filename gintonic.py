@@ -351,6 +351,7 @@ search_window = None
 def open_system(selected_system_tuple):
     close_curses()
 
+    # TODO move this make_index, and within make_index, use similar logic to fill the arcade list with the first part of the output of mame -listfull. but also make sure it's ordered according to the display name?
     global arcade_dict
     if not arcade_dict:
         if selected_system_tuple[1] in [ALL_SYSTEMS, ARCADE]:

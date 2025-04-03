@@ -44,7 +44,7 @@ run_mame is a special case which will be used to launch arcade games with MAME, 
 
 ## Run
 
-* python3 gintonic.py
+* ./gintonic.py
 <br>
 For exit - press q. 
 
