@@ -55,9 +55,7 @@ def check_find_game(word, item):
         return word.upper() in item.name.upper()
 
 
-def fill_arcade_dictionary():
-    global arcade_dict
-
+def fill_arcade_dictionary(arcade_dict):
     mame_list = subprocess.run(['mame', '-listfull'], stdout=subprocess.PIPE).stdout.decode('utf-8')
     for line in mame_list.split('\n')[1:-1]:
         file_name = line[:line.index(" ")]
@@ -364,7 +362,7 @@ def open_system(selected_system):
     global arcade_dict
     if not arcade_dict:
         if selected_system.name in [ALL_SYSTEMS, ARCADE]:
-            fill_arcade_dictionary()
+            fill_arcade_dictionary(arcade_dict)
 
     make_index(selected_system)
     init_curses()
@@ -500,7 +498,6 @@ def main():
     try:
         read_config()
         make_systems(paths_to_games)
-        global systems
         init_curses()
         global system_menu
         global game_menu
@@ -522,8 +519,6 @@ def is_config_option_valid(option):
 
 
 def make_systems(paths):
-    global systems
-
     for path in paths.split(";"):
         sys_list = [System(path, system) for system in os.listdir(path)]
         # Only display systems that have a valid launcher in the config file
@@ -535,11 +530,27 @@ def make_systems(paths):
     if is_config_option_valid('path_to_mame') and is_config_option_valid('run_mame'):
         systems.insert(1, System(config.get(SECTION, 'path_to_mame'), ARCADE))
 
+def add_regular_games(path, selected_system):
+    games = sorted(os.listdir(path + os.sep + selected_system))
+    for game in games:
+        data.append(Game(path, selected_system, game))
+
+
+def add_arcade_games(path, selected_system):
+    games = os.listdir(path)
+    for game in games:
+        data.append(Game(path, selected_system, game))
+        data.sort(key=lambda game_obj: arcade_dict[game_obj.name.split(".")[0]] if game_obj.name.split(".")[0] in arcade_dict else game_obj.name)
+
+
+def add_games_to_data(path, selected_system):
+    if selected_system == ARCADE:
+        add_arcade_games(path, selected_system)
+    else:
+        add_regular_games(path, selected_system)
+
 
 def make_index(selected_system_obj):
-    global data
-    global systems
-
     path = selected_system_obj.path
     selected_system = selected_system_obj.name
 
@@ -548,23 +559,9 @@ def make_index(selected_system_obj):
     if selected_system == ALL_SYSTEMS:
         system_list = systems[1:] # removing ALL_SYSTEMS
         for system in system_list:
-            if system.name == ARCADE:
-                games = os.listdir(system.path)
-                for game in games:
-                    data.append(Game(system.path, system.name, game))
-            else:
-                games = sorted(os.listdir(system.path + os.sep + system.name))
-                for game in games:
-                    data.append(Game(system.path, system.name, game))
-    elif selected_system == ARCADE:
-        games = os.listdir(path)
-        for game in games:
-            data.append(Game(path, selected_system, game))
-            data.sort(key=lambda game_obj: arcade_dict[game_obj.name.split(".")[0]] if game_obj.name.split(".")[0] in arcade_dict else game_obj.name)
+            add_games_to_data(system.path, system.name)
     else:
-        games = sorted(os.listdir(path + os.sep + selected_system))
-        for game in games:
-            data.append(Game(path, selected_system, game))
+        add_games_to_data(path, selected_system)
 
 
 if __name__ == '__main__':
