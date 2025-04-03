@@ -49,10 +49,10 @@ def check_find_system(word, item):
 
 
 def check_find_game(word, item):
-    if item.system == ARCADE and item.game.split(".")[0] in arcade_dict:
-        return word.upper() in arcade_dict[item.game.split(".")[0]].upper()
+    if item.system == ARCADE and item.name.split(".")[0] in arcade_dict:
+        return word.upper() in arcade_dict[item.name.split(".")[0]].upper()
     else:
-        return word.upper() in item.game.upper()
+        return word.upper() in item.name.upper()
 
 
 def fill_arcade_dictionary():
@@ -70,10 +70,10 @@ class System:
         self.name = name
 
 class Game:
-    def __init__(self, path, system, game):
+    def __init__(self, path, system, name):
         self.path = path
         self.system = system
-        self.game = game
+        self.name = name
 
 class SearchWindow(object):
 
@@ -272,10 +272,10 @@ class GameMenu(object):
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(data):
-                if data[pos].system == ARCADE and data[pos].game.split(".")[0] in arcade_dict:
-                    dat = (' ' + arcade_dict[data[pos].game.split(".")[0]] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                if data[pos].system == ARCADE and data[pos].name.split(".")[0] in arcade_dict:
+                    dat = (' ' + arcade_dict[data[pos].name.split(".")[0]] + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 else:
-                    dat = (' ' + data[pos].game + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                    dat = (' ' + data[pos].name + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 self.gameswin.addstr(i + 1, 1, dat, style)
                 dat = (' ' + data[pos].system + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
@@ -380,10 +380,10 @@ def launch_game(game_obj):
     close_curses()
     path = game_obj.path
     system = game_obj.system
-    game = game_obj.game
-    print(f"RUNNING: {game}")
+    name = game_obj.name
+    print(f"RUNNING: {name}")
     run_option = "run_mame" if system == ARCADE else 'run_'+system
-    full_path = os.path.join(path, game) if system == ARCADE else os.path.join(path, system, game)
+    full_path = os.path.join(path, name) if system == ARCADE else os.path.join(path, system, name)
     args = config.get(SECTION, run_option).format(full_path)
     origWD = os.getcwd()
     os.chdir(os.path.dirname(CONFIG_FILE))
@@ -560,7 +560,7 @@ def make_index(selected_system_obj):
         games = os.listdir(path)
         for game in games:
             data.append(Game(path, selected_system, game))
-            #data.sort(key=lambda game_obj: arcade_dict[game_obj.game.split(".")[0]] if game_obj.game.split(".")[0] in arcade_dict else game_obj.game)
+            data.sort(key=lambda game_obj: arcade_dict[game_obj.name.split(".")[0]] if game_obj.name.split(".")[0] in arcade_dict else game_obj.name)
     else:
         games = sorted(os.listdir(path + os.sep + selected_system))
         for game in games:
