@@ -37,6 +37,16 @@ systems = []
 data = []
 arcade_dict = {}
 
+class System:
+    i = 12345
+
+    def f(self):
+        return 'hello world'
+
+class Game:
+    def __init__(self, realpart, imagpart):
+        self.r = realpart
+        self.i = imagpart
 
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
@@ -541,7 +551,7 @@ def make_index(path, selected_system):
                 for game in games:
                     data.append((system[0], system[1], game))
             else:
-                games = os.listdir(system[0] + os.sep + system[1])
+                games = sorted(os.listdir(system[0] + os.sep + system[1]))
                 for game in games:
                     data.append((system[0], system[1], game))
     elif selected_system == ARCADE:
@@ -550,7 +560,7 @@ def make_index(path, selected_system):
             data.append((path, selected_system, game))
             #data.sort(key=lambda game_tuple: arcade_dict[game_tuple[2].split(".")[0]] if game_tuple[2].split(".")[0] in arcade_dict else game_tuple[2])
     else:
-        games = os.listdir(path + os.sep + selected_system)
+        games = sorted(os.listdir(path + os.sep + selected_system))
         for game in games:
             data.append((path, selected_system, game))
 
