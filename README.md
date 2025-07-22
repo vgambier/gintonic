@@ -44,7 +44,7 @@ paths_to_games - each path in this list is a path to a directory with games that
 ```
 Where: 
   SystemX - is the name of a system/folder (DOS, NES, etc).<br>
-  GameX - is the name of a game.<br>
+  GameX - is the name of a game. Can be file or a folder, depending on the system.<br>
 
 `platforms` - allows you to specify a command to run a game on a particular system. `{0}` is substituted by the absolute path of the game you are launching.
 

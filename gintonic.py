@@ -9,6 +9,7 @@ import logging
 import time
 import subprocess
 import json
+import shutil
 
 
 LOG_FORMAT = '%(asctime)s %(message)s'
@@ -507,8 +508,11 @@ def make_systems(paths):
     systems.sort(key=lambda sys_obj: sys_obj.name)
 
     systems.insert(0, System("", ALL_SYSTEMS))
-    # for MAME, we launch arcade games without a filepath
-    systems.insert(1, System("", ARCADE))
+
+    # we only add ARCADE if MAME is installed
+    if shutil.which('mame') is not None:
+        # for MAME, we launch arcade games without a filepath
+        systems.insert(1, System("", ARCADE))
 
 def add_regular_games(path, selected_system):
     new_games = sorted(os.listdir(path + os.sep + selected_system))
