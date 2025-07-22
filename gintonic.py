@@ -25,28 +25,17 @@ ARCADE = "Arcade"
 SEARCH = 'Search'
 HELP_MESSAGE = "(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down."
 
-exited = False
-
 config = None
-mainwindow = curses.initscr()
-
 systems = []
 games = []
 
+mainwindow = curses.initscr()
+system_menu = None
+game_menu = None
+search_window = None
 
-def read_config():
-    logging.info('Reading config: ' + CONFIG_FILE)
-    with open(CONFIG_FILE, 'r') as file:
-        global config
-        config = json.load(file)
-
-def check_find_system(word, item):
-    return word.casefold() in item.casefold()
-
-
-def check_find_game(word, item):
-    return word.casefold() in item.name.casefold()
-
+current_menu_is_systems = True
+exited = False
 
 class System:
     def __init__(self, path, name):
@@ -219,7 +208,6 @@ class SystemMenu(object):
                 return i
         return -1
 
-
 class GameMenu(object):
 
     def __init__(self, mainwindow):
@@ -343,11 +331,17 @@ class GameMenu(object):
         return -1
 
 
-system_menu = None
-game_menu = None
-current_menu_is_systems = True # FIXME? suspicious
-search_window = None
+def read_config():
+    logging.info('Reading config: ' + CONFIG_FILE)
+    with open(CONFIG_FILE, 'r') as file:
+        global config
+        config = json.load(file)
 
+def check_find_system(word, item):
+    return word.casefold() in item.casefold()
+
+def check_find_game(word, item):
+    return word.casefold() in item.name.casefold()
 
 def open_system(selected_system):
     close_curses()
@@ -359,7 +353,6 @@ def open_system(selected_system):
     current_menu_is_systems = False
     game_menu.reset_pos()
     game_menu.draw()
-
 
 def launch_game(game_obj):
     close_curses()
@@ -386,13 +379,11 @@ def launch_game(game_obj):
     search_window.draw()
     game_menu.draw()
 
-
 def init_curses():
     mainwindow.keypad(1)
     curses.noecho()
     curses.cbreak()
     curses.curs_set(0)
-
 
 def close_curses():
     mainwindow.keypad(0)
@@ -400,7 +391,6 @@ def close_curses():
     curses.nocbreak()
     curses.curs_set(2)
     curses.endwin()
-
 
 def do_resize():
     mainwindow.clear()
@@ -419,7 +409,6 @@ def do_resize():
     search_window.resize()
     search_window.draw()
 
-
 def main_loop():
     while 1:
         time.sleep(0.001)
@@ -430,7 +419,6 @@ def main_loop():
             main_loop_systems(c)
         else:
             main_loop_games(c)
-
 
 def main_loop_systems(c):
     if c == ord('/'):
@@ -454,7 +442,6 @@ def main_loop_systems(c):
         open_system(current_system)
     if c == curses.KEY_RESIZE:
         do_resize()
-
 
 def main_loop_games(c):
     if c == ord('/'):
@@ -488,31 +475,8 @@ def main_loop_games(c):
     if c == curses.KEY_RESIZE:
         do_resize()
 
-def main():
-    global exited
-    try:
-        read_config()
-        paths_to_games = config.get(CONFIG_ENTRY_PATHS_TO_GAMES)
-        make_systems(paths_to_games)
-        init_curses()
-        global system_menu
-        global game_menu
-        global search_window
-        search_window = SearchWindow(mainwindow)
-        system_menu = SystemMenu(mainwindow)
-        game_menu = GameMenu(mainwindow)
-        do_resize()
-        main_loop()
-    except Exception as e:
-        logging.exception(e)
-    finally:
-        exited = True
-        close_curses()
-
-
 def is_system_config_valid(option):
     return bool(config.get(CONFIG_ENTRY_PLATFORMS).get(option))
-
 
 def make_systems(paths):
     for path in paths:
@@ -533,7 +497,6 @@ def add_regular_games(path, selected_system):
     for game in new_games:
         games.append(Game(path, selected_system, game))
 
-
 def add_arcade_games(path, selected_system):
 
     mame_list = subprocess.run(['mame', '-listfull'], stdout=subprocess.PIPE).stdout.decode('utf-8')
@@ -551,7 +514,6 @@ def add_games(path, selected_system):
     else:
         add_regular_games(path, selected_system)
 
-
 def make_index(selected_system_obj):
     path = selected_system_obj.path
     selected_system = selected_system_obj.name
@@ -564,6 +526,28 @@ def make_index(selected_system_obj):
             add_games(system.path, system.name)
     else:
         add_games(path, selected_system)
+
+
+def main():
+    global exited
+    try:
+        read_config()
+        paths_to_games = config.get(CONFIG_ENTRY_PATHS_TO_GAMES)
+        make_systems(paths_to_games)
+        init_curses()
+        global system_menu
+        global game_menu
+        global search_window
+        system_menu = SystemMenu(mainwindow)
+        game_menu = GameMenu(mainwindow)
+        search_window = SearchWindow(mainwindow)
+        do_resize()
+        main_loop()
+    except Exception as e:
+        logging.exception(e)
+    finally:
+        exited = True
+        close_curses()
 
 
 if __name__ == '__main__':
