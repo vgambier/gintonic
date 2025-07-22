@@ -17,16 +17,14 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 
 WORK_DIR = os.path.join(os.path.expanduser('~'), ".config/gintonic")
 CONFIG_FILE = os.path.join(WORK_DIR, "config.json")
-
 CONFIG_ENTRY_PATHS_TO_GAMES = "paths_to_games"
 CONFIG_ENTRY_PLATFORMS = "platforms"
+
 ALL_SYSTEMS = "All systems"
 ARCADE = "Arcade"
+SEARCH = 'Search'
 HELP_MESSAGE = "(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down."
 
-TOTAL_WIDTH = 160
-SYSTEM_WIDTH = 40
-GAME_WIDTH = TOTAL_WIDTH - SYSTEM_WIDTH
 exited = False
 
 config = None
@@ -63,19 +61,24 @@ class Game:
 
 class SearchWindow(object):
 
-    def __init__(self):
-        self.swin = curses.newwin(4, 59, 0, 0)
-        self.inp = curses.newwin(1, 55, 2, 2)
+    def __init__(self, mainwindow):
+        self.main = mainwindow
+        size = mainwindow.getmaxyx()
+        self.swin = curses.newwin(4, size[1], 0, 0)
+        self.inp = curses.newwin(1, size[1]-4, 2, 2)
         self.text = textpad.Textbox(self.inp, insert_mode=False)
         self.history_point = 0
         self.search_history = collections.deque(maxlen=100)
 
     def resize(self):
-        self.swin.resize(4, 158)
-        self.inp.resize(1, 55)
+        size = self.main.getmaxyx()
+        self.swin.resize(4, size[1])
+        self.inp.resize(1, size[1]-4)
 
     def draw(self):
-        self.swin.addstr(1, 80, 'Search')
+        size = self.main.getmaxyx()
+        self.swin.clear()
+        self.swin.addstr(1, int(size[1]/2), SEARCH)
         self.swin.border()
         self.swin.refresh()
         self.inp.refresh()
@@ -120,7 +123,7 @@ class SystemMenu(object):
     def __init__(self, mainwindow):
         self.main = mainwindow
         size = mainwindow.getmaxyx()
-        self.syswin = curses.newwin(size[0]-5, TOTAL_WIDTH, 4, 0)
+        self.syswin = curses.newwin(size[0]-5, size[1], 4, 0)
         self.offset = 0
         self.pos = 0
         self.search_pos = 0
@@ -128,7 +131,7 @@ class SystemMenu(object):
     def resize(self):
         size = self.main.getmaxyx()
         if (size[0] > 10) and (size[1] > 20):
-            self.syswin.resize(size[0]-5, min(TOTAL_WIDTH, size[1]))
+            self.syswin.resize(size[0]-5, size[1])
             self.syswin.mvwin(4, 0)
 
     def list_pos(self):
@@ -139,18 +142,20 @@ class SystemMenu(object):
             return systems[self.list_pos()]
 
     def draw(self):
+        self.main = mainwindow
+        size = mainwindow.getmaxyx()
         pos = self.offset
         for i in range(self.syswin.getmaxyx()[0]-2):
             style = 0
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(systems):
-                dat = (' ' + systems[pos].name + ' ' * TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + systems[pos].name + ' ' * size[1])[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
             else:
-                self.syswin.addstr(i + 1, 1, (' '*TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 2])
+                self.syswin.addstr(i + 1, 1, (' ' * size[1])[:self.syswin.getmaxyx()[1] - 2])
             pos += 1
-        self.main.addstr(self.main.getmaxyx()[0] - 1, 0, HELP_MESSAGE[:self.main.getmaxyx()[1]-1])
+        self.main.addstr(size[0] - 1, 0, HELP_MESSAGE[:size[1]-1])
         self.main.refresh()
         self.syswin.border()
         self.syswin.refresh()
@@ -220,19 +225,23 @@ class GameMenu(object):
     def __init__(self, mainwindow):
         self.main = mainwindow
         size = mainwindow.getmaxyx()
-        self.syswin = curses.newwin(size[0]-5, min(SYSTEM_WIDTH, size[1]), 4, 0)
-        self.gameswin = curses.newwin(size[0]-5, min(GAME_WIDTH, max(0, size[1] - SYSTEM_WIDTH)), 4, SYSTEM_WIDTH)
+        system_width = int(0.25*size[1])
+        game_width = size[1] - system_width
+        self.syswin = curses.newwin(size[0]-5, system_width, 4, 0)
+        self.gameswin = curses.newwin(size[0]-5, game_width, 4, system_width)
         self.offset = 0
         self.pos = 0
         self.search_pos = 0
 
     def resize(self):
         size = self.main.getmaxyx()
+        system_width = int(0.25*size[1])
+        game_width = size[1] - system_width
         if (size[0] > 10) and (size[1] > 20):
-            self.syswin.resize(size[0]-5, min(SYSTEM_WIDTH, size[1]))
-            self.gameswin.resize(size[0]-5, min(GAME_WIDTH, max(0, size[1] - SYSTEM_WIDTH)))
+            self.syswin.resize(size[0]-5, system_width)
+            self.gameswin.resize(size[0]-5, game_width)
             self.syswin.mvwin(4, 0)
-            self.gameswin.mvwin(4, SYSTEM_WIDTH)
+            self.gameswin.mvwin(4, system_width)
 
     def refresh_window(self):
         self.gameswin.erase()
@@ -251,22 +260,23 @@ class GameMenu(object):
             return games[self.list_pos()]
 
     def draw(self):
+        self.main = mainwindow
+        size = mainwindow.getmaxyx()
         pos = self.offset
         for i in range(self.syswin.getmaxyx()[0]-2):
             style = 0
             if pos == self.list_pos():
                 style = curses.A_STANDOUT
             if pos < len(games):
-                dat = (' ' + games[pos].name + ' ' * 100)[:self.gameswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + games[pos].name + ' ' * size[1])[:self.gameswin.getmaxyx()[1] - 3] + ' '
                 self.gameswin.addstr(i + 1, 1, dat, style)
-                dat = (' ' + games[pos].system + ' ' * 100)[:self.syswin.getmaxyx()[1] - 3] + ' '
+                dat = (' ' + games[pos].system + ' ' * size[1])[:self.syswin.getmaxyx()[1] - 3] + ' '
                 self.syswin.addstr(i + 1, 1, dat, style)
             else:
-                self.gameswin.addstr(i + 1, 1, (' '*100)[:self.gameswin.getmaxyx()[1] - 2])
-                self.syswin.addstr(i + 1, 1, (' '*100)[:self.syswin.getmaxyx()[1] - 2])
+                self.gameswin.addstr(i + 1, 1, (' ' * size[1])[:self.gameswin.getmaxyx()[1] - 2])
+                self.syswin.addstr(i + 1, 1, (' ' * size[1])[:self.syswin.getmaxyx()[1] - 2])
             pos += 1
-        self.main.addstr(self.main.getmaxyx()[0] - 1, 0,
-                         '(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
+        self.main.addstr(size[0] - 1, 0, HELP_MESSAGE[:size[1]-1])
         self.main.refresh()
         self.syswin.border()
         self.gameswin.border()
@@ -335,7 +345,7 @@ class GameMenu(object):
 
 system_menu = None
 game_menu = None
-current_menu_is_systems = True
+current_menu_is_systems = True # FIXME? suspicious
 search_window = None
 
 
@@ -396,9 +406,13 @@ def do_resize():
     mainwindow.clear()
 
     if current_menu_is_systems:
+        game_menu.resize()
+        game_menu.draw()
         system_menu.resize()
         system_menu.draw()
     else:
+        system_menu.resize()
+        system_menu.draw()
         game_menu.resize()
         game_menu.draw()
 
@@ -484,7 +498,7 @@ def main():
         global system_menu
         global game_menu
         global search_window
-        search_window = SearchWindow()
+        search_window = SearchWindow(mainwindow)
         system_menu = SystemMenu(mainwindow)
         game_menu = GameMenu(mainwindow)
         do_resize()
