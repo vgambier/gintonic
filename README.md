@@ -48,7 +48,7 @@ Where:
 
 `platforms` - allows you to specify a command to run a game on a particular system. `{0}` is substituted by the absolute path of the game you are launching.
 
-`Arcade` is a special case. The entry also specifies which command will be used to launch arcade games with MAME, but you do not need a game folder called `MAME`. gintonic uses MAME's internal database to list available games. This assumes you don't have missing MAME roms. Note: this only works with MAME.
+`Arcade` is a special case. The entry also specifies which command will be used to launch arcade games with MAME, but you do not need a game folder called `Arcade`. gintonic uses MAME's internal database to list available games - this assumes you don't have missing MAME roms. Note: this only works with MAME.
 
 ## Running gintonic
 

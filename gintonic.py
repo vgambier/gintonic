@@ -497,13 +497,13 @@ def make_systems(paths):
 
     systems.insert(0, System("", ALL_SYSTEMS))
 
-    # we only display ARCADE if MAME is installed
-    if shutil.which('mame') is not None:
+    # we only display ARCADE if it has a config line entry and MAME is installed
+    if config.get(CONFIG_ENTRY_PLATFORMS).get(ARCADE) and shutil.which('mame') is not None:
         # for MAME, we launch arcade games without a filepath
         systems.insert(1, System("", ARCADE))
 
     if len(systems) < 2: # minimum length is 1 because of ALL_SYSTEMS
-        raise Exception("No systems are set up correctly. Check that game paths are valid folders and/or that MAME is installed and has a config line entry.")
+        raise Exception("No systems are set up correctly. Check that game paths are valid folders, that they have config line entries and/or that MAME is installed and has a config line entry.")
 
 def add_regular_games(path, selected_system):
     new_games = sorted(os.listdir(path + os.sep + selected_system))
