@@ -10,7 +10,7 @@ gintonic is a lightweight emulation front-end that works in a terminal. It is de
 
 ## Requirements
 
-* python3
+* Python 3. Tested with Python 3.10.12
 
 ## Installation
 

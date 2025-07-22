@@ -12,7 +12,7 @@ import json
 import shutil
 
 
-LOG_FORMAT = '%(asctime)s %(message)s'
+LOG_FORMAT = '%(asctime)s - %(levelname)s: %(message)s'
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 
 WORK_DIR = os.path.join(os.path.expanduser('~'), ".config/gintonic")
@@ -36,6 +36,7 @@ search_window = None
 
 current_menu_is_systems = True
 exited = False
+
 
 class System:
     def __init__(self, path, name):
@@ -332,10 +333,15 @@ class GameMenu(object):
 
 
 def read_config():
-    logging.info('Reading config: ' + CONFIG_FILE)
-    with open(CONFIG_FILE, 'r') as file:
-        global config
-        config = json.load(file)
+    try:
+        with open(CONFIG_FILE, 'r') as file:
+            global config
+            try:
+                config = json.load(file)
+            except json.JSONDecodeError as e:
+                raise Exception('Config file is not valid JSON.')
+    except FileNotFoundError as e:
+        raise Exception('Could not find config file. See README.md for instructions.')
 
 def check_find_system(word, item):
     return word.casefold() in item.casefold()
@@ -360,7 +366,7 @@ def launch_game(game_obj):
     system = game_obj.system
     name = game_obj.name
 
-    print(f"RUNNING: {name}")
+    logging.info(f"RUNNING: {name}")
     if system == ARCADE:
         full_path = path
     else:
@@ -479,7 +485,12 @@ def is_system_config_valid(option):
     return bool(config.get(CONFIG_ENTRY_PLATFORMS).get(option))
 
 def make_systems(paths):
-    for path in paths:
+    if not paths:
+        raise Exception('No game paths found in config file.')
+    for path in list(set(paths)):
+        if not os.path.isdir(path):
+            logging.warning(f'{path} is not a directory.')
+            continue
         sys_list = [System(path, system) for system in os.listdir(path)]
         # Only display systems that have a valid launcher in the config file
         systems.extend(list(filter(lambda sys_obj: is_system_config_valid(sys_obj.name), sys_list)))
@@ -491,6 +502,9 @@ def make_systems(paths):
     if shutil.which('mame') is not None:
         # for MAME, we launch arcade games without a filepath
         systems.insert(1, System("", ARCADE))
+
+    if len(systems) < 2: # minimum length is 1 because of ALL_SYSTEMS
+        raise Exception("No systems are set up correctly. Check that game paths are valid folders and/or that MAME is set up correctly.")
 
 def add_regular_games(path, selected_system):
     new_games = sorted(os.listdir(path + os.sep + selected_system))
@@ -544,7 +558,7 @@ def main():
         do_resize()
         main_loop()
     except Exception as e:
-        logging.exception(e)
+        logging.error(e)
     finally:
         exited = True
         close_curses()
