@@ -1,9 +1,9 @@
 {
   "paths_to_games": [
-    "/home/XXX/Documents/git/gintonic/games"
+    "/home/user/foobar/games"
   ],
   "platforms": {
-    "dos": "DISPLAY=:0 ./dos.sh {0}",
-    "psx": "DISPLAY=:0 ./psx.sh {0}"
+    "Sony - Amiga DS": "aMIG0S '{0}'",
+    "Arcade": "mame '{0}'"
   }
 }

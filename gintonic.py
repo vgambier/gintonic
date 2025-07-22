@@ -366,7 +366,7 @@ def launch_game(game_obj):
     system = game_obj.system
     name = game_obj.name
 
-    logging.info(f"RUNNING: {name}")
+    logging.info(f"Running: {name}")
     if system == ARCADE:
         full_path = path
     else:
@@ -417,7 +417,6 @@ def do_resize():
 
 def main_loop():
     while 1:
-        time.sleep(0.001)
         c = mainwindow.getch()
         if current_menu_is_systems:
             if c == ord('q'):
@@ -486,7 +485,7 @@ def is_system_config_valid(option):
 
 def make_systems(paths):
     if not paths:
-        raise Exception('No game paths found in config file.')
+        logging.warning('No game paths found in config file.')
     for path in list(set(paths)):
         if not os.path.isdir(path):
             logging.warning(f'{path} is not a directory.')
@@ -498,13 +497,13 @@ def make_systems(paths):
 
     systems.insert(0, System("", ALL_SYSTEMS))
 
-    # we only add ARCADE if MAME is installed
+    # we only display ARCADE if MAME is installed
     if shutil.which('mame') is not None:
         # for MAME, we launch arcade games without a filepath
         systems.insert(1, System("", ARCADE))
 
     if len(systems) < 2: # minimum length is 1 because of ALL_SYSTEMS
-        raise Exception("No systems are set up correctly. Check that game paths are valid folders and/or that MAME is set up correctly.")
+        raise Exception("No systems are set up correctly. Check that game paths are valid folders and/or that MAME is installed and has a config line entry.")
 
 def add_regular_games(path, selected_system):
     new_games = sorted(os.listdir(path + os.sep + selected_system))
