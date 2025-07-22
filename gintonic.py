@@ -5,20 +5,21 @@ import sys
 import curses
 import curses.textpad as textpad
 import collections
-import configparser
 import logging
 import time
 import threading
 import subprocess
+import json
+
 
 LOG_FORMAT = '%(asctime)s %(message)s'
 logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 
-WORK_DIR = os.path.join(os.path.expanduser('~'), '.config/gintonic')
-CONFIG_FILE = os.path.join(WORK_DIR, 'config')
+WORK_DIR = os.path.join(os.path.expanduser('~'), ".config/gintonic")
+CONFIG_FILE = os.path.join(WORK_DIR, "config.json")
 
-SECTION = 'CONFIG'
-PATHS_TO_GAMES = 'paths_to_games'
+CONFIG_ENTRY_PATHS_TO_GAMES = "paths_to_games"
+CONFIG_ENTRY_PLATFORMS = "platforms"
 ALL_SYSTEMS = "All systems"
 ARCADE = "Arcade"
 
@@ -27,18 +28,18 @@ SYSTEM_WIDTH = 40
 GAME_WIDTH = TOTAL_WIDTH - SYSTEM_WIDTH
 exited = False
 
-config = configparser.ConfigParser()
+config = None
 mainwindow = curses.initscr()
 
 systems = []
 games = []
 
+
 def read_config():
     logging.info('Reading config: ' + CONFIG_FILE)
-    config.read(CONFIG_FILE)
-    global paths_to_games
-    paths_to_games = config.get(SECTION, PATHS_TO_GAMES)
-
+    with open(CONFIG_FILE, 'r') as file:
+        global config
+        config = json.load(file)
 
 def check_find_system(word, item):
     return word.casefold() in item.casefold()
@@ -358,13 +359,11 @@ def launch_game(game_obj):
 
     print(f"RUNNING: {name}")
     if system == ARCADE:
-        run_option = "run_mame"
         full_path = path
     else:
-        run_option = 'run_'+system
         full_path = os.path.join(path, system, name)
 
-    args = config.get(SECTION, run_option).format(full_path)
+    args = config.get(CONFIG_ENTRY_PLATFORMS).get(system).format(full_path)
     origWD = os.getcwd()
     os.chdir(os.path.dirname(CONFIG_FILE))
     try:
@@ -479,6 +478,7 @@ def main():
     global exited
     try:
         read_config()
+        paths_to_games = config.get(CONFIG_ENTRY_PATHS_TO_GAMES)
         make_systems(paths_to_games)
         init_curses()
         global system_menu
@@ -496,15 +496,15 @@ def main():
         close_curses()
 
 
-def is_config_option_valid(option):
-    return config.has_option(SECTION, option) and config.get(SECTION, option) != ""
+def is_system_config_valid(option):
+    return bool(config.get(CONFIG_ENTRY_PLATFORMS).get(option))
 
 
 def make_systems(paths):
-    for path in paths.split(";"):
+    for path in paths:
         sys_list = [System(path, system) for system in os.listdir(path)]
         # Only display systems that have a valid launcher in the config file
-        systems.extend(list(filter(lambda sys_obj: is_config_option_valid('run_'+sys_obj.name), sys_list)))
+        systems.extend(list(filter(lambda sys_obj: is_system_config_valid(sys_obj.name), sys_list)))
     systems.sort(key=lambda sys_obj: sys_obj.name)
 
     systems.insert(0, System("", ALL_SYSTEMS))

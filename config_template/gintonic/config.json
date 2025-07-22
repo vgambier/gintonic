@@ -1,0 +1,9 @@
+{
+  "paths_to_games": [
+    "/home/XXX/Documents/git/gintonic/games"
+  ],
+  "platforms": {
+    "dos": "DISPLAY=:0 ./dos.sh {0}",
+    "psx": "DISPLAY=:0 ./psx.sh {0}"
+  }
+}

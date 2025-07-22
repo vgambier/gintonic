@@ -1,10 +1,10 @@
 # gintonic
 
-gintonic is a lightweight game launcher that works in a terminal. It is designed to be fast, to be comfortable for keyboard users and to work through ssh. You can use any emulator you want as long as you specify the command in the configuration file yourself.
+gintonic is a lightweight emulation front-end that works in a terminal. It is designed to be fast, to be comfortable for keyboard users, and to work through ssh. This allows you to have a unified text-based interface for browsing and launching all of your games using any emulator. You can use any emulator you want as long as you specify the command in the configuration file yourself.
 
 ## Features
 
-* Support of VIM-style keys
+* Support of vim-style keys
 * Search history
 * Script based confguration
 
@@ -14,17 +14,26 @@ gintonic is a lightweight game launcher that works in a terminal. It is designed
 
 ## Installation
 
-* Download gintonic
-* Place a config file named config into ~/.config/gintonic. You can use the example config_template folder for this purpose.
+* Clone this repository
+* Place a config file named config.json into ~/.config/gintonic. You can copy the example found in `config_template/` for this purpose.
+
+## Configuration
 
 Example:
 ```
-[CONFIG]
-paths_to_games = /home/user/games;/home/user2/games
-run_dos = ./dos.sh {0}
-run_mame = mame "{0}"
+{
+  "paths_to_games": [
+    "/home/user/foobar/games1",
+    "/home/user/foobar/games2"
+  ],
+  "platforms": {
+    "Sony - Amiga DS": "aMIG0S '{0}'",
+    "MAME": "mame '{0}'",
+  }
+}
 ```
-paths_to_games - each semicolon-separated path is a path to a directory with games that should have the following structure:
+
+paths_to_games - each path in this list is a path to a directory with games that should have the following structure:
 ```
 ├── System1
 │   ├── Game1
@@ -36,16 +45,16 @@ paths_to_games - each semicolon-separated path is a path to a directory with gam
 Where: 
   SystemX - is the name of a system/folder (DOS, NES, etc).<br>
   GameX - is the name of a game.<br>
-<br>
-run_system - specifies a command to run a game on a particular system. {0} is substituted by an absolute path of a game.
-In the config file, run_system should be lower-case even if the folder contained upper-case letters.
-run_mame is a special case which will be used to launch arcade games with MAME, regardless of the name of the folder.
 
-## Run
+`platforms` - allows you to specify a command to run a game on a particular system. `{0}` is substituted by the absolute path of the game you are launching.
+
+`MAME` is a special case. The entry also specifies which command will be used to launch arcade games with MAME, but you do not need a game folder called `MAME`. gintonic uses MAME's internal database to list available games (this assumes you don't have missing MAME roms).
+
+## Running gintonic
 
 * ./gintonic.py
 <br>
-For exit - press q. 
+To exit, press `q`.
 
 ## Desktop entry
 .desktop and .svg files are provided. To add gintonic as a desktop entry, edit gintonic.desktop to reflect the directory in which gintonic.py is located

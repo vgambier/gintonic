@@ -1,5 +1,0 @@
-[CONFIG]
-paths_to_games = /mnt/mediaplayer/games;/mnt/mediaplayer/games2
-run_dos = DISPLAY=:0 ./dos.sh {0}
-run_psx = DISPLAY=:0 ./psx.sh {0}
-
