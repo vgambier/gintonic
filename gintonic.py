@@ -7,7 +7,6 @@ import curses.textpad as textpad
 import collections
 import logging
 import time
-import threading
 import subprocess
 import json
 
@@ -22,6 +21,7 @@ CONFIG_ENTRY_PATHS_TO_GAMES = "paths_to_games"
 CONFIG_ENTRY_PLATFORMS = "platforms"
 ALL_SYSTEMS = "All systems"
 ARCADE = "Arcade"
+HELP_MESSAGE = "(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down."
 
 TOTAL_WIDTH = 160
 SYSTEM_WIDTH = 40
@@ -149,8 +149,7 @@ class SystemMenu(object):
             else:
                 self.syswin.addstr(i + 1, 1, (' '*TOTAL_WIDTH)[:self.syswin.getmaxyx()[1] - 2])
             pos += 1
-        self.main.addstr(self.main.getmaxyx()[0] - 1, 0,
-                         '(q)uit, l or Enter launch, / search, (n)ext, N prev. Navigate with j/k/up/down/wheel. Navigate search history with up/down.'[:self.main.getmaxyx()[1]-1])
+        self.main.addstr(self.main.getmaxyx()[0] - 1, 0, HELP_MESSAGE[:self.main.getmaxyx()[1]-1])
         self.main.refresh()
         self.syswin.border()
         self.syswin.refresh()
