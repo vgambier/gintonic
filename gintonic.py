@@ -41,11 +41,11 @@ def read_config():
 
 
 def check_find_system(word, item):
-    return word.upper() in item.upper()
+    return word.casefold() in item.casefold()
 
 
 def check_find_game(word, item):
-    return word.upper() in item.name.upper()
+    return word.casefold() in item.name.casefold()
 
 
 class System:
