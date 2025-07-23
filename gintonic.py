@@ -17,6 +17,7 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 
 WORK_DIR = os.path.join(os.path.expanduser('~'), ".config/gintonic")
 CONFIG_FILE = os.path.join(WORK_DIR, "config.json")
+
 CONFIG_ENTRY_PATHS_TO_GAMES = "paths_to_games"
 CONFIG_ENTRY_PLATFORMS = "platforms"
 
@@ -518,8 +519,7 @@ def add_arcade_games(path, selected_system):
         file_name = line[:line.index(" ")]
         human_name = line[line.index(" "):].lstrip()[1:-1]
         games.append(Game(file_name, selected_system, human_name))
-        # NB: sort is too expensive, we keep the order of mame -listfull which is already somewhat sorted
-        #games.sort(key=lambda game_obj: game_obj.name)
+    games.sort(key=lambda game_obj: game_obj.name) # mame -listfull output is not sorted by display name
 
 def add_games(path, selected_system):
     if selected_system == ARCADE:
