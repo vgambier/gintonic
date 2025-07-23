@@ -15,7 +15,7 @@ gintonic is a lightweight emulation front-end that works in a terminal. It is de
 ## Installation
 
 * Clone this repository
-* Place a config file named config.json into ~/.config/gintonic. You can copy the example found in `config_template/` for this purpose.
+* Place a config file named config.json into ~/.config/gintonic. You can copy the example found in `config_template/` for this purpose. The provided example has working commands for many popular emulators - feel free to tweak the flags, the emulators, and the system/folder names.
 
 ## Configuration
 
