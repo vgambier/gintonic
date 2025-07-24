@@ -23,7 +23,7 @@
     "Nintendo - Nintendo DSi (Decrypted)": "./melonds.sh \"{0}\"",
     "Nintendo - Nintendo Entertainment System [headered NES 2.0]": "mesen2 \"{0}\"",
     "Nintendo - Super Nintendo Entertainment System": "bsnes \"{0}\" --fullscreen",
-    "Nintendo - Satellaview": "bsnes \"{0}\" --fullscreen # ares \"{0}\" --fullscreen",
+    "Nintendo - Satellaview": "bsnes \"{0}\" --fullscreen",
     "Nintendo - Virtual Boy": "mednafen \"{0}\"",
     "Sega - Game Gear": "ares \"{0}\" --fullscreen",
     "Sega - Master System - Mark III": "ares \"{0}\" --fullscreen",
