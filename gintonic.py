@@ -338,9 +338,11 @@ def read_config():
             try:
                 config = json.load(file)
             except json.JSONDecodeError as e:
-                raise Exception('Config file is not valid JSON.')
+                raise Exception("Config file is not valid JSON.")
+            if "paths_to_games" not in config or "systems" not in config:
+                raise Exception("Config files must have keys 'paths_to_games' and 'systems'. See README.md.")
     except FileNotFoundError as e:
-        raise Exception('Could not find config file. See README.md for instructions.')
+        raise Exception("Could not find config file. See README.md for instructions.")
 
 def check_find_system(word, item):
     return word.casefold() in item.casefold()
