@@ -45,6 +45,7 @@
     "Sega - Mega-CD & Sega CD": "./ares_mega_cd.sh {0}",
     "Philips - CD-i": "retroarch --fullscreen -L /home/USER/.config/retroarch/cores/same_cdi_libretro.so {0}",
     "NEC - PC-88 series": "mame pc8801 -flop1 {0}",
-    "Nintendo - Wii U (Decrypted)": "cemu -g {0} -f"
+    "Nintendo - Wii U (Decrypted)": "cemu -g {0} -f",
+    "Nintendo - Nintendo Switch": "ryujinx --fullscreen {0}"
   }
 }
