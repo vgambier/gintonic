@@ -18,9 +18,6 @@ logging.basicConfig(stream=sys.stderr, level=logging.INFO, format=LOG_FORMAT)
 WORK_DIR = os.path.join(os.path.expanduser('~'), ".config/gintonic")
 CONFIG_FILE = os.path.join(WORK_DIR, "config.json")
 
-CONFIG_ENTRY_PATHS_TO_GAMES = "paths_to_games"
-CONFIG_ENTRY_PLATFORMS = "platforms"
-
 ALL_SYSTEMS = "All systems"
 ARCADE = "Arcade"
 SEARCH = 'Search'
@@ -373,14 +370,18 @@ def launch_game(game_obj):
     else:
         full_path = os.path.join(path, system, name)
 
-    args = config.get(CONFIG_ENTRY_PLATFORMS).get(system).format(full_path)
-    origWD = os.getcwd()
-    os.chdir(os.path.dirname(CONFIG_FILE))
+    system_entry = config.get("systems").get(system)
+    command = system_entry.get("command").strip()
+    if not command:
+        raise Exception(f"System '{system}' has no command in config file.")
+    suffix = system_entry.get("suffix")
     try:
-        subprocess.call(args, shell=True)
+        if suffix:
+            subprocess.run(command.split(" ") + [full_path] + suffix.split(" "))
+        else:
+            subprocess.run(command.split(" ") + [full_path])
     except KeyboardInterrupt:
         pass
-    os.chdir(origWD)
     init_curses()
     curses.flushinp()
     search_window.draw()
@@ -482,7 +483,7 @@ def main_loop_games(c):
         do_resize()
 
 def is_system_config_valid(option):
-    return bool(config.get(CONFIG_ENTRY_PLATFORMS).get(option))
+    return bool(config.get("systems").get(option))
 
 def make_systems(paths):
     if not paths:
@@ -499,7 +500,7 @@ def make_systems(paths):
     systems.insert(0, System("", ALL_SYSTEMS))
 
     # we only display ARCADE if it has a config line entry and MAME is installed
-    if config.get(CONFIG_ENTRY_PLATFORMS).get(ARCADE) and shutil.which('mame') is not None:
+    if config.get("systems").get(ARCADE) and shutil.which('mame') is not None:
         # for MAME, we launch arcade games without a filepath
         systems.insert(1, System("", ARCADE))
 
@@ -545,7 +546,7 @@ def main():
     global exited
     try:
         read_config()
-        paths_to_games = config.get(CONFIG_ENTRY_PATHS_TO_GAMES)
+        paths_to_games = config.get("paths_to_games")
         make_systems(paths_to_games)
         init_curses()
         global system_menu

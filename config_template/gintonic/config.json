@@ -2,49 +2,147 @@
   "paths_to_games": [
     "/media/raid/data/library/games/roms/no-intro",
     "/media/raid/data/library/games/roms/Redump",
-    "/media/raid/data/library/games/roms/other",
+    "/media/raid/data/library/games/roms/other"
   ],
-  "platforms": {
-    "Arcade": "mame \"{0}\"",
-    "Benesse - Pocket Challenge V2": "ares \"{0}\" --fullscreen",
-    "NEC - PC Engine SuperGrafx": "mednafen \"{0}\"",
-    "NEC - PC Engine - TurboGrafx 16": "mednafen \"{0}\"",
-    "Nintendo - Family Computer Disk System (FDS) [unheadered]": "mesen2 \"{0}\"",
-    "Nintendo - Family Computer Disk System (QD2FDS) [unheadered]": "mesen2 \"{0}\"",
-    "Nintendo - Game Boy": "sameboy \"{0}\" -f",
-    "Nintendo - Game Boy Advance": "mgba-qt \"{0}\" -f",
-    "Nintendo - Game boy Advance (Multiboot)": "mgba-qt \"{0}\" -f",
-    "Nintendo - Game Boy Color": "sameboy \"{0}\" -f",
-    "Nintendo - Nintendo 3DS (Decrypted)": "citra-qt \"{0}\"",
-    "Nintendo - Nintendo 64 (BigEndian)": "simple64-gui \"{0}\"",
-    "Nintendo - Nintendo 64DD": "ares \"{0}\" --fullscreen",
-    "Nintendo - Nintendo DS (Decrypted)": "./melonds.sh \"{0}\"",
-    "Nintendo - Nintendo DS (Download Play)": "./melonds.sh \"{0}\"",
-    "Nintendo - Nintendo DSi (Decrypted)": "./melonds.sh \"{0}\"",
-    "Nintendo - Nintendo Entertainment System [headered NES 2.0]": "mesen2 \"{0}\"",
-    "Nintendo - Super Nintendo Entertainment System": "bsnes \"{0}\" --fullscreen",
-    "Nintendo - Satellaview": "bsnes \"{0}\" --fullscreen",
-    "Nintendo - Virtual Boy": "mednafen \"{0}\"",
-    "Sega - Game Gear": "ares \"{0}\" --fullscreen",
-    "Sega - Master System - Mark III": "ares \"{0}\" --fullscreen",
-    "Sega - Mega Drive - Genesis": "blastem \"{0}\"",
-    "Sega - SG-1000": "ares \"{0}\" --fullscreen",
-    "SNK - Neo Geo Pocket": "mednafen \"{0}\"",
-    "SNK - Neo Geo Pocket Color": "mednafen \"{0}\"",
-    "Atari - 2600": "stella \"{0}\"",
-    "Sony - PlayStation 2": "pcsx2-qt \"{0}\" -nogui  -fullscreen",
-    "Nintendo - Wii (RVZ)": "dolphin-emu --exec=\"{0}\" --batch",
-    "Nintendo - GameCube (RVZ)": "dolphin-emu --exec=\"{0}\" --batch",
-    "Sony - PlayStation": "./ps1.sh \"{0}\"",
-    "Sega - Saturn": "./saturn.sh \"{0}\"",
-    "Microsoft - Xbox": "xemu -full-screen -dvd_path \"{0}\"",
-    "Microsoft - Xbox 360": "xenia \"{0}\"",
-    "Sony - PlayStation Portable": "PPSSPPQt \"{0}\" --fullscreen",
-    "Sony - PlayStation 3": "rpcs3 --fullscreen --no-gui \"{0}\"",
-    "Sega - Dreamcast": "./flycast.sh \"{0}\"",
-    "Sega - Mega-CD & Sega CD": "./ares_mega_cd.sh \"{0}\"",
-    "Philips - CD-i": "retroarch --fullscreen -L /home/USER/.config/retroarch/cores/same_cdi_libretro.so \"{0}\"",
-    "NEC - PC-88 series": "mame pc8801 -flop1 \"{0}\"",
-    "Nintendo - Wii U (Decrypted)": "cemu -g \"{0}\" -f"
+  "systems": {
+    "Arcade": {
+      "command": "mame"
+    },
+    "Benesse - Pocket Challenge V2": {
+      "command": "ares",
+      "suffix": "--fullscreen"
+    },
+    "NEC - PC Engine SuperGrafx": {
+      "command": "mednafen"
+    },
+    "NEC - PC Engine - TurboGrafx 16": {
+      "command": "mednafen"
+    },
+    "Nintendo - Family Computer Disk System (FDS) [unheadered]": {
+      "command": "mesen2"
+    },
+    "Nintendo - Family Computer Disk System (QD2FDS) [unheadered]": {
+      "command": "mesen2"
+    },
+    "Nintendo - Game Boy": {
+      "command": "sameboy",
+      "suffix": "-f"
+    },
+    "Nintendo - Game Boy Advance": {
+      "command": "mgba-qt",
+      "suffix": "-f"
+    },
+    "Nintendo - Game boy Advance (Multiboot)": {
+      "command": "mgba-qt",
+      "suffix": "-f"
+    },
+    "Nintendo - Game Boy Color": {
+      "command": "sameboy",
+      "suffix": "-f"
+    },
+    "Nintendo - Nintendo 3DS (Decrypted)": {
+      "command": "citra-qt"
+    },
+    "Nintendo - Nintendo 64 (BigEndian)": {
+      "command": "simple64-gui"
+    },
+    "Nintendo - Nintendo 64DD": {
+      "command": "ares",
+      "suffix": "--fullscreen"
+    },
+    "Nintendo - Nintendo DS (Decrypted)": {
+      "command": "./melonds.sh"
+    },
+    "Nintendo - Nintendo DS (Download Play)": {
+      "command": "./melonds.sh"
+    },
+    "Nintendo - Nintendo DSi (Decrypted)": {
+      "command": "./melonds.sh"
+    },
+    "Nintendo - Nintendo Entertainment System [headered NES 2.0]": {
+      "command": "mesen2"
+    },
+    "Nintendo - Super Nintendo Entertainment System": {
+      "command": "bsnes",
+      "suffix": "--fullscreen"
+    },
+    "Nintendo - Satellaview": {
+      "command": "bsnes",
+      "suffix": "--fullscreen"
+    },
+    "Nintendo - Virtual Boy": {
+      "command": "mednafen"
+    },
+    "Sega - Game Gear": {
+      "command": "ares",
+      "suffix": "--fullscreen"
+    },
+    "Sega - Master System - Mark III": {
+      "command": "ares",
+      "suffix": "--fullscreen"
+    },
+    "Sega - Mega Drive - Genesis": {
+      "command": "blastem"
+    },
+    "Sega - SG-1000": {
+      "command": "ares",
+      "suffix": "--fullscreen"
+    },
+    "SNK - Neo Geo Pocket": {
+      "command": "mednafen"
+    },
+    "SNK - Neo Geo Pocket Color": {
+      "command": "mednafen"
+    },
+    "Atari - 2600": {
+      "command": "stella"
+    },
+    "Sony - PlayStation 2": {
+      "command": "pcsx2-qt",
+      "suffix": "-nogui  -fullscreen"
+    },
+    "Nintendo - Wii (RVZ)": {
+      "command": "dolphin-emu --exec=",
+      "suffix": "--batch"
+    },
+    "Nintendo - GameCube (RVZ)": {
+      "command": "dolphin-emu --exec=",
+      "suffix": "--batch"
+    },
+    "Sony - PlayStation": {
+      "command": "./ps1.sh"
+    },
+    "Sega - Saturn": {
+      "command": "./saturn.sh"
+    },
+    "Microsoft - Xbox": {
+      "command": "xemu -full-screen -dvd_path"
+    },
+    "Microsoft - Xbox 360": {
+      "command": "xenia"
+    },
+    "Sony - PlayStation Portable": {
+      "command": "PPSSPPQt",
+      "suffix": "--fullscreen"
+    },
+    "Sony - PlayStation 3": {
+      "command": "rpcs3 --fullscreen --no-gui"
+    },
+    "Sega - Dreamcast": {
+      "command": "./flycast.sh"
+    },
+    "Sega - Mega-CD & Sega CD": {
+      "command": "./ares_mega_cd.sh"
+    },
+    "Philips - CD-i": {
+      "command": "retroarch --fullscreen -L /home/USER/.config/retroarch/cores/same_cdi_libretro.so"
+    },
+    "NEC - PC-88 series": {
+      "command": "mame pc8801 -flop1"
+    },
+    "Nintendo - Wii U (Decrypted)": {
+      "command": "cemu -g",
+      "suffix": "-f"
+    }
   }
 }
